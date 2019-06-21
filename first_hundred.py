@@ -157,4 +157,28 @@ def Euler_Problem_6(n=100):
     sumsq = sum_of_integer_squares(n)
     return int(sqsum - sumsq)
 
+def Euler_Problem_7(n=10001):
+    '''
+    By listing the first six prime numbers: 2, 3, 5, 7, 11, and 13, we can see that the 6th prime is 13.
+    What is the 10001st prime number?
+    '''
+    def has_nontrivial_divisor(num):
+        assert num >= 2
+        trial = 2
+        while num % trial != 0:
+            trial += 1
+        if trial < num:
+            return True
+        else:
+            return False
+    
+    # brute force: check numbers one by one
+    value = 1
+    num_primes = 0
+    while num_primes < n:
+        value += 1
+        if not has_nontrivial_divisor(value):
+            num_primes += 1
+    return value
+
 
