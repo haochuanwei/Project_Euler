@@ -128,3 +128,33 @@ def Euler_Problem_5(n=20):
 
     solution_cache = {}
     return subproblem(n, solution_cache)
+
+def Euler_Problem_6(n=100):
+    '''
+    The sum of the squares of the first ten natural numbers is,
+    1^2 + 2^2 + ... + 10^2 = 385
+    The square of the sum of the first ten natural numbers is,
+    (1 + 2 + ... + 10)^2 = 55^2 = 3025
+    Hence the difference between the sum of the squares of the first ten natural numbers and the square of the sum is 3025 - 385 = 2640.
+    Find the difference between the sum of the squares of the first one hundred natural numbers and the square of the sum.
+    '''
+    # looks like brute force gives you O(n) or O(n logn), which is not bad...
+    # but we can do better with mathematical insight.
+    def sum_of_integer_squares(k):
+        '''
+        Use the formula 1^2 + 2^2 + ... + n^2 = (n * (n+1) * (2n+1)) / 6.
+        '''
+        return (k * (k+1) * (2*k + 1)) / 6
+   
+    def square_of_integer_sums(k):
+        '''
+        Use the formula 1 + 2 + ... + n = n (n+1) / 2.
+        '''
+        return (n * (n+1) / 2) ** 2
+
+    # O(logn) basic operations
+    sqsum = square_of_integer_sums(n)
+    sumsq = sum_of_integer_squares(n)
+    return int(sqsum - sumsq)
+
+
