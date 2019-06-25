@@ -249,3 +249,24 @@ def Euler_Problem_8(n=13):
             max_prod = tmp_prod
     return max_prod
 
+def Euler_Problem_9(n=1000):
+    '''
+    A Pythagorean triplet is a set of three natural numbers, a < b < c, for which,
+    a^2 + b^2 = c^2
+    For example, 3^2 + 4^2 = 9 + 16 = 25 = 5^2.
+    There exists exactly one Pythagorean triplet for which a + b + c = 1000.
+    Find the product abc.
+    '''
+    import math
+    assert n > 10
+    # first assume that a <= b < c < n/2. Then, for c to be an integer we can't have a=b.
+    # hence assume that a < b < c and that n/3 < 3.
+
+    # brute-force O(n^2) approach
+    for c in range(n//2, n//3, -1):
+        c_sq = c ** 2
+        for b in range(c-1, int(c / math.sqrt(2)), -1):
+            a = n - c - b
+            if a ** 2 + b ** 2 == c_sq:
+                return a * b * c
+    return -1
