@@ -270,3 +270,28 @@ def Euler_Problem_9(n=1000):
             if a ** 2 + b ** 2 == c_sq:
                 return a * b * c
     return -1
+
+def Euler_Problem_10(n=2000000):
+    '''
+    The sum of the primes below 10 is 2 + 3 + 5 + 7 = 17.
+    Find the sum of all the primes below two million.
+    '''
+    def divisible_by_prime(num, primes):
+        assert num >= 2
+        for _p in primes:
+            if num % _p == 0:
+                return True
+        return False
+    
+    # brute force: check numbers one by one, starting at 3
+    # also maintain a list of primes to divide by
+    value = 2
+    current_primes = [2]
+    while value < n-1:
+        if value % 10000 == 0:
+            print(value)
+        value += 1
+        if not divisible_by_prime(value, current_primes):
+            current_primes.append(value)
+    return sum(current_primes)
+
