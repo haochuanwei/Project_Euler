@@ -568,10 +568,9 @@ def Euler_Problem_13():
     20849603980134001723930671666823555245252804609722
     53503534226472524250874054075591789781264330331690
     '''
-    # take the first 12 digits and throw away the rest.
-    # the greatest error there can be is less than 0.01*50 = 50% of the original 10th digit, whose magnitude as less than or equal to the eventual 10th digit.
+    # take the first 16 digits and throw away the rest.
     arr_in_str_form = [_x for _x in raw_list.split('\n') if len(_x.replace(' ', '')) > 0]
-    arr = [int(_y[:12]) for _y in arr_in_str_form]
+    arr = [int(_y[:16]) for _y in arr_in_str_form]
     assert len(arr) == 100
 
     return str(sum(arr))[:10]
