@@ -666,3 +666,85 @@ def Euler_Problem_16(n=1000):
         num = multiply_by_2(num)
     return sum(num.values())  
 
+def Euler_Problem_17(n=1000):
+    '''
+    If the numbers 1 to 5 are written out in words: one, two, three, four, five, then there are 3 + 3 + 5 + 4 + 4 = 19 letters used in total.
+    If all the numbers from 1 to 1000 (one thousand) inclusive were written out in words, how many letters would be used?
+    NOTE: Do not count spaces or hyphens. For example, 342 (three hundred and forty-two) contains 23 letters and 115 (one hundred and fifteen) contains 20 letters. The use of "and" when writing out numbers is in compliance with British usage.
+    '''
+    hard_coded_mapping = {
+            0: 0, # "zero" in this case is really "nothing"
+            1: 3, # "one"
+            2: 3, # "two"
+            3: 5, # etc.
+            4: 4,
+            5: 4,
+            6: 3,
+            7: 5,
+            8: 5,
+            9: 4,
+            10: 3,
+            11: 6,
+            12: 6,
+            13: 8,
+            14: 8,
+            15: 7,
+            16: 7,
+            17: 9,
+            18: 8,
+            19: 8,
+            20: 6,
+            30: 6,
+            40: 5,
+            50: 5,
+            60: 5,
+            70: 7,
+            80: 6,
+            90: 6
+            }
+    def subroutine_small(num):
+        '''
+        Assumes that the number is below a hundred.
+        '''
+        assert isinstance(num, int) and (num >= 0) and (num < 100), num
+        if num in hard_coded_mapping.keys():
+            return hard_coded_mapping[num]
+        else:
+            floor_to_ten = (num // 10) * 10
+            modulos_ten  = num % 10
+            return hard_coded_mapping[floor_to_ten] + hard_coded_mapping[modulos_ten]
+
+    def count_digits(num):
+        '''
+        Assumes that the number is below a million.
+        '''
+        assert isinstance(num, int) and (num > 0), num
+        num_thousands = num // 1000
+        num_hundreds  = (num % 1000) // 100
+        num_small     = num % 100
+
+        part_below_hundred = subroutine_small(num_small)
+        digits = part_below_hundred
+        if num_thousands > 0:
+            digits += count_digits(num_thousands) + 8 # 8 from "thousand"
+        if num_hundreds > 0:
+            digits += count_digits(num_hundreds) + 7 # 7 from "hundred"
+        if (num_thousands > 0 or num_hundreds > 0) and part_below_hundred > 0:
+            digits += 3 # 3 from "and"
+        return digits
+    
+    def test():
+        from random import randint
+        for k in range(0, 10):
+            trial = randint(1, 10000)
+            print(trial, count_digits(trial))
+        for k in range(1, 20):
+            trial = k * 50
+            print(trial, count_digits(trial))
+
+    total_digits = 0
+    for k in range(1, n+1):
+        val = count_digits(k)
+        #print(k, val)
+        total_digits += val
+    return total_digits
