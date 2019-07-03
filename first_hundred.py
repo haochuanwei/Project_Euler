@@ -575,3 +575,51 @@ def Euler_Problem_13():
 
     return str(sum(arr))[:10]
 
+def Euler_Problem_14(n=1000000):
+    '''
+    The following iterative sequence is defined for the set of positive integers:
+    n -> n/2 (n is even)
+    n -> 3n + 1 (n is odd)
+    Using the rule above and starting with 13, we generate the following sequence:
+    13 -> 40 -> 20 -> 10 -> 5 -> 16 -> 8 -> 4 -> 2 -> 1
+    It can be seen that this sequence (starting at 13 and finishing at 1) contains 10 terms. Although it has not been proved yet (Collatz Problem), it is thought that all starting numbers finish at 1.
+    Which starting number, under one million, produces the longest chain?
+    NOTE: Once the chain starts the terms are allowed to go above one million.
+    '''
+    def collatz(num):
+        '''
+        Subroutine to calculate the next term in the collatz sequence.
+        '''
+        assert num > 0 and isinstance(num, int)
+        next_term = (num // 2) if (num % 2 == 0) else (3 * num + 1)
+        return next_term
+
+    def lookup_collatz_length(num, cache):
+        ''' 
+        Uses recursion with cache for "non-sequential dynamic programming".
+        '''
+        assert cache[1] == 1
+        if num in cache.keys():
+            return cache[num]
+        else:
+            length = lookup_collatz_length(collatz(num), cache) + 1
+            cache[num] = length
+            return length
+
+    # initialize cache
+    solution_cache = {1: 1}
+    max_length = 1
+    best_start = 1
+    for k in range(1, n):
+        _length = lookup_collatz_length(k, solution_cache)
+        if _length > max_length:
+            max_length = _length
+            best_start = k
+    # reconstuct the longest collatz sequence        
+    best_chain = []
+    value = best_start
+    while value > 1:
+        best_chain.append(value)
+        value = collatz(value)
+    best_chain.append(1)
+    return best_start, max_length, best_chain
