@@ -623,3 +623,20 @@ def Euler_Problem_14(n=1000000):
         value = collatz(value)
     best_chain.append(1)
     return best_start, max_length, best_chain
+
+def Euler_Problem_15(n=20):
+    '''
+    Starting in the top left corner of a 2 * 2 grid, and only being able to move to the right and down, there are exactly 6 routes to the bottom right corner.
+    How many such routes are there through a 20 * 20 grid?
+    '''
+    # this is classic "2n choose n".
+    num_routes = 1.0
+    # trick to compute (2n)! / n! with less risk of numeric overflow
+    for k in range(1, n+1):
+        num_routes *= (n+k) / k
+    return round(num_routes)
+
+
+
+
+
