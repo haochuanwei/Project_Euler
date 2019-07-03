@@ -636,7 +636,33 @@ def Euler_Problem_15(n=20):
         num_routes *= (n+k) / k
     return round(num_routes)
 
-
-
-
+def Euler_Problem_16(n=1000):
+    '''
+    2 ^ 15 = 32768 and the sum of its digits is 3 + 2 + 7 + 6 + 8 = 26.
+    What is the sum of the digits of the number 2 ^ 1000?
+    '''
+    # 2 ^ 1000 is between 10^250 and 10^333, which is too large for typical data types.
+    # However, one can easily store by digit.
+    def multiply_by_2(orderDict):
+        '''
+        Subroutine to multiply a number by 2.
+        orderDict -- defaultdict of magnitude -> value mapping.
+        Eg. {0: 1, 1: 3, 2: 6} stands for 1*10^1 + 3*10^1 + 6*10^2 = 631.
+        '''
+        from collections import defaultdict
+        retDict = defaultdict(int)
+        for _key, _value in orderDict.items():
+            doubled = _value * 2
+            current = doubled % 10
+            incremt = doubled // 10
+            retDict[_key] += current
+            if incremt > 0:
+                retDict[_key+1] += incremt
+        return retDict
+    
+    # run subroutine n times
+    num = {0: 1}
+    for k in range(0, n):
+        num = multiply_by_2(num)
+    return sum(num.values())  
 
