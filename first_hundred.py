@@ -748,3 +748,79 @@ def Euler_Problem_17(n=1000):
         #print(k, val)
         total_digits += val
     return total_digits
+
+def Euler_Problem_18(row_idx=-1):
+    '''
+    By starting at the top of the triangle below and moving to adjacent numbers on the row below, the maximum total from top to bottom is 23.
+    
+       3
+      7 4
+     2 4 6
+    8 5 9 3
+    That is, 3 + 7 + 4 + 9 = 23.
+    Find the maximum total from top to bottom of the triangle below:
+                  75
+                 95 64
+                17 47 82
+               18 35 87 10
+              20 04 82 47 65
+             19 01 23 75 03 34
+            88 02 77 73 07 63 67
+           99 65 04 28 06 16 70 92
+          41 41 26 56 83 40 80 70 33
+         41 48 72 33 47 32 37 16 94 29
+        53 71 44 65 25 43 91 52 97 51 14
+       70 11 33 28 77 73 17 78 39 68 17 57
+      91 71 52 38 17 14 91 43 58 50 27 29 48
+     63 66 04 68 89 53 67 30 73 16 69 87 40 31
+    04 62 98 27 23 09 70 98 73 93 38 53 60 04 23
+    NOTE: As there are only 16384 routes, it is possible to solve this problem by trying every route. However, Problem 67, is the same challenge with a triangle containing one-hundred rows; it cannot be solved by brute force, and requires a clever method! ;o)
+    '''
+    inp_arr = '''
+    75
+    95 64
+    17 47 82
+    18 35 87 10
+    20 04 82 47 65
+    19 01 23 75 03 34
+    88 02 77 73 07 63 67
+    99 65 04 28 06 16 70 92
+    41 41 26 56 83 40 80 70 33
+    41 48 72 33 47 32 37 16 94 29
+    53 71 44 65 25 43 91 52 97 51 14
+    70 11 33 28 77 73 17 78 39 68 17 57
+    91 71 52 38 17 14 91 43 58 50 27 29 48
+    63 66 04 68 89 53 67 30 73 16 69 87 40 31
+    04 62 98 27 23 09 70 98 73 93 38 53 60 04 23
+    '''
+    arr = [[int(_z) for _z in _y.split(' ') if len(_z) > 0] for _y in inp_arr.split('\n')]
+    arr = [_l for _l in arr if len(_l) > 0]
+
+    # dynamic programming: tile it up by cumulative scores, row by row
+    points = []
+    for i, _row in enumerate(arr):
+        # base case: the first row
+        if i == 0:
+            points.append(_row[:])
+        else:
+            tmp_row = []
+            last_idx = len(_row) - 1
+            for j, _num in enumerate(_row):
+                # special case: the left-most element of a row
+                if j == 0:
+                    parent_value = points[i-1][0]
+                # special case: the right-most element of a row
+                elif j == last_idx:
+                    parent_value = points[i-1][j-1]
+                # common case: a middle element of a row
+                else:
+                    parent_value = max(points[i-1][j-1], points[i-1][j]) 
+                tmp_row.append(parent_value + _row[j])
+            points.append(tmp_row[:])
+    return max(points[row_idx])
+
+
+
+
+
+
