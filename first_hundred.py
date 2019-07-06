@@ -869,4 +869,54 @@ def Euler_Problem_19(n=2000):
     # the problem asks for Jan 1, 1901 to Dec 31, 2000, so we exclude 1900
     return total_count - count_Sunday_1sts(1900, 1)[0]
 
+def Euler_Problem_20(n=100):
+    '''
+    n! means n * (n - 1) * ... * 3 * 2 * 1
+
+    For example, 10! = 10 * 9 * ... * 3 * 2 * 1 = 3628800,
+    and the sum of the digits in the number 10! is 3 + 6 + 2 + 8 + 8 + 0 + 0 = 27.
+    
+    Find the sum of the digits in the number 100!
+    '''
+    # 100! is between 10^100 and 10^200, which is too large for typical data types.
+    # However, one can easily store by digit.
+    from collections import defaultdict
+    def multiply_by_constant(orderDict, c):
+        '''
+        Subroutine to multiply a number by c.
+        orderDict -- defaultdict of magnitude -> value mapping.
+        Eg. {0: 1, 1: 3, 2: 6} stands for 1*10^1 + 3*10^1 + 6*10^2 = 631.
+        '''
+        retDict = defaultdict(int)
+        for _key, _value in orderDict.items():
+            multiplied = _value * c
+            shift = 0
+            while multiplied > 0 or shift == 0:
+                retDict[_key+shift] += (multiplied % 10)
+                multiplied = multiplied // 10
+                shift += 1
+        return retDict
+
+    def correct_digits(orderDict):
+        '''
+        Promote digits with value greater than or equal to 10.
+        '''
+        retDict = defaultdict(int)
+        for _key, _value in orderDict.items():
+            retDict[_key] += _value % 10
+            if _value >= 10:
+                retDict[_key+1] += _value // 10
+        return retDict
+
+    # run subroutine n times
+    num = {0: 1}
+    for k in range(1, n+1):
+        num = multiply_by_constant(num, k)
+        num = correct_digits(num)
+    return sum(num.values())  
+
+
+
+
+
 
