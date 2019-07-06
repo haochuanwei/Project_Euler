@@ -819,8 +819,54 @@ def Euler_Problem_18(row_idx=-1):
             points.append(tmp_row[:])
     return max(points[row_idx])
 
+def Euler_Problem_19(n=2000):
+    '''
+    You are given the following information, but you may prefer to do some research for yourself.
+    1 Jan 1900 was a Monday.
+    Thirty days has September,
+    April, June and November.
+    All the rest have thirty-one,
+    Saving February alone,
+    Which has twenty-eight, rain or shine.
+    And on leap years, twenty-nine.
+    A leap year occurs on any year evenly divisible by 4, but not on a century unless it is divisible by 400.
+    How many Sundays fell on the first of the month during the twentieth century (1 Jan 1901 to 31 Dec 2000)?
+    '''
+    month_to_days_common = {1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30,
+            7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31}
+    month_to_days_leap = {1: 31, 2: 29, 3: 31, 4: 30, 5: 31, 6: 30,
+            7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31}
 
+    def count_Sunday_1sts(year, first_day):
+        '''
+        Subroutine to count the number of 1st Sundays in a year.
+        '''
+        # set up calculation
+        month_to_days = dict(month_to_days_common)
+        if year % 4 == 0:
+            if (year % 100 != 0) or (year % 400 == 0):
+                month_to_days = dict(month_to_days_leap)
+        val = first_day
 
+        # loop over months
+        count = 0
+        months = []
+        for _month in range(1, 13):
+            if val % 7 == 0:
+                count += 1
+                months.append((year, _month))
+            val += month_to_days[_month]
+        return count, val % 7, months[:]
 
+    # Jan 1 1900 was a Monday
+    first_day = 1
+    total_count = 0
+    match_months = []
+    for _year in range(1900, n+1):
+        count, first_day, months = count_Sunday_1sts(_year, first_day)
+        total_count += count
+        match_months += months
+    # the problem asks for Jan 1, 1901 to Dec 31, 2000, so we exclude 1900
+    return total_count - count_Sunday_1sts(1900, 1)[0]
 
 
