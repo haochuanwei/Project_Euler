@@ -915,6 +915,83 @@ def Euler_Problem_20(n=100):
         num = correct_digits(num)
     return sum(num.values())  
 
+def Euler_Problem_21(n=10000):
+    '''
+    Let d(n) be defined as the sum of proper divisors of n (numbers less than n which divide evenly into n).
+    If d(a) = b and d(b) = a, where a != b, then a and b are an amicable pair and each of a and b are called amicable numbers.
+    For example, the proper divisors of 220 are 1, 2, 4, 5, 10, 11, 20, 22, 44, 55 and 110; therefore d(220) = 284. The proper divisors of 284 are 1, 2, 4, 71 and 142; so d(284) = 220.
+    Evaluate the sum of all the amicable numbers under 10000.
+    '''
+
+    # subroutine to factorize with dynamic programming
+    def factorize(num, cache):
+        '''
+        Assumes that the factorization of every number less than num has been stored in cache.
+        cache -- a dict of dicts, eg. {2: {2: 1}, 4: {2: 2}, 6: {2: 1, 3: 1}}
+        '''
+        from collections import defaultdict
+        if num < 2:
+            return {}
+        # case 0: num is already in cache
+        if num in cache.keys():
+            return cache[num]
+        # case 1: num has a nontrivial divisor -- copy its factorization and bump
+        trial = 1
+        while trial < num:
+            trial += 1
+            factor = num / trial
+            if factor in cache.keys():
+                # remark: one could get away with storing just trial and factor, and then use a reconstruction method, to reduce memory usage from questionaly O(n logn) to O(n), where n is the largest number to be factorized.
+                _factorization = defaultdict(int)
+                _factorization.update(cache[factor])
+                _factorization[trial] += 1
+                cache[num] = _factorization
+                return _factorization
+        # case 2: num is a prime -- add new factorization to cache
+        _factorization = {num: 1}
+        cache[num] = _factorization 
+        return _factorization
+
+    def get_sum_proper_divisors(factorization):
+        '''
+        Determine the sum of proper divisors given a factorization.
+        '''
+        sum_divisors = 1
+        original_number = 1
+        for _base, _power in factorization.items():
+            factors = [_base ** k for k in range(0, _power+1)]
+            sum_divisors *= sum(factors)
+            original_number *= (_base ** _power)
+        return sum_divisors - original_number
+
+    def check_amicable(a, cache):
+        a_factorization = factorize(a, cache)
+        b = get_sum_proper_divisors(a_factorization)
+        b_factorization = factorize(b, cache)
+        if a == get_sum_proper_divisors(b_factorization) and a != b:
+            return (a, b)
+        return False
+
+    def test():
+        cache = {}
+        for k in range(2, 20):
+            print(k, get_sum_proper_divisors(factorize(k, cache)))
+            print(220, check_amicable(220, cache))
+
+    # initialize cache
+    cache_factorizations = {}
+    candidate = 1
+    amicables = []
+
+    while candidate < n:
+        candidate += 1
+        amicable_pair = check_amicable(candidate, cache_factorizations)
+        if amicable_pair:
+            a, b = amicable_pair
+            if a < b:
+                amicables += [a, b]
+    return amicables        
+
 
 
 
