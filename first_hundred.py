@@ -48,16 +48,7 @@ def Euler_Problem_3(n=600851475143):
     What is the largest prime factor of the number 600851475143 ?
     '''
     # start from 2 and keep dividing
-    def least_divisor(num, floor=2):
-        '''
-        Find the least divisor of a number, above some floor.
-        '''
-        assert num >= floor
-        trial = floor
-        while num % trial != 0:
-            trial += 1
-        return trial
-
+    from subroutines import least_divisor
     greatest_divisor = 2
     value            = n
     while greatest_divisor < value:
@@ -71,15 +62,7 @@ def Euler_Problem_4(n=3):
     A palindromic number reads the same both ways. The largest palindrome made from the product of two 2-digit numbers is 9009 = 91 * 99.
     Find the largest palindrome made from the product of two 3-digit numbers.
     '''
-    def is_a_palindrome(num):
-        assert isinstance(num, int)
-        str_form = str(num)
-        n_digits = len(str_form)
-        for k in range(0, (n_digits+1)//2):
-            if str_form[k] != str_form[-1-k]:
-                return False
-        return True
-
+    from subroutines import is_a_palindrome
     assert n >= 2
     greatest_product = 0
     # brute-force approach that searches the high end of possible products
@@ -98,12 +81,7 @@ def Euler_Problem_5(n=20):
     2520 is the smallest number that can be divided by each of the numbers from 1 to 10 without any remainder.
     What is the smallest positive number that is evenly divisible by all of the numbers from 1 to 20?
     '''
-    def lowest_divisor(num):
-        assert num >= 2
-        trial = 2
-        while num % trial != 0:
-            trial += 1
-        return trial
+    from subroutines import least_divisor
 
     def subproblem(num, cache):
         '''
@@ -122,7 +100,8 @@ def Euler_Problem_5(n=20):
         if prev % num == 0:
             cache[num] = prev
         else:
-            factor = lowest_divisor(num)
+            # take advantage of the fact that any divisor of num divides prev
+            factor = least_divisor(num, floor=2)
             cache[num] = prev * factor
         return cache[num]
 
@@ -162,15 +141,7 @@ def Euler_Problem_7(n=10001):
     By listing the first six prime numbers: 2, 3, 5, 7, 11, and 13, we can see that the 6th prime is 13.
     What is the 10001st prime number?
     '''
-    def has_nontrivial_divisor(num):
-        assert num >= 2
-        trial = 2
-        while num % trial != 0:
-            trial += 1
-        if trial < num:
-            return True
-        else:
-            return False
+    from subroutines import has_nontrivial_divisor
     
     # brute force: check numbers one by one
     value = 1
@@ -409,30 +380,7 @@ def Euler_Problem_12(n=500):
     We can see that 28 is the first triangle number to have over five divisors.
     What is the value of the first triangle number to have over five hundred divisors?
     '''
-
-    # subroutine to factorize with dynamic programming
-    def factorize(num, cache):
-        '''
-        Assumes that the factorization of every number less than num has been stored in cache.
-        cache -- a dict of dicts, eg. {2: {2: 1}, 4: {2: 2}, 6: {2: 1, 3: 1}}
-        '''
-        from collections import defaultdict
-        trial = 1
-        # case 1: num has a nontrivial divisor -- copy its factorization and bump
-        while trial < num:
-            trial += 1
-            factor = num / trial
-            if factor in cache.keys():
-                # remark: one could get away with storing just trial and factor, and then use a reconstruction method, to reduce memory usage from questionaly O(n logn) to O(n), where n is the largest number to be factorized.
-                _factorization = defaultdict(int)
-                _factorization.update(cache[factor])
-                _factorization[trial] += 1
-                cache[num] = _factorization
-                return _factorization
-        # case 2: num is a prime -- add new factorization to cache
-        _factorization = {num: 1}
-        cache[num] = _factorization 
-        return _factorization
+    from subroutines import factorize_with_cache
 
     def get_num_divisors(factorization):
         '''
@@ -451,7 +399,7 @@ def Euler_Problem_12(n=500):
     # here's the trick: we don't check the number to be outputed, but its near-squarer-root.
     while candidate < 1e+6:
         candidate += 1
-        factors = factorize(candidate, cache_factorizations)
+        factors = factorize_with_cache(candidate, cache_factorizations)
         cache_num_divisors[candidate] = get_num_divisors(factors)
         # calculate the number of divisors of (candidate-1) * candidate / 2
         if candidate % 2 == 0:
@@ -643,27 +591,12 @@ def Euler_Problem_16(n=1000):
     '''
     # 2 ^ 1000 is between 10^250 and 10^333, which is too large for typical data types.
     # However, one can easily store by digit.
-    def multiply_by_2(orderDict):
-        '''
-        Subroutine to multiply a number by 2.
-        orderDict -- defaultdict of magnitude -> value mapping.
-        Eg. {0: 1, 1: 3, 2: 6} stands for 1*10^1 + 3*10^1 + 6*10^2 = 631.
-        '''
-        from collections import defaultdict
-        retDict = defaultdict(int)
-        for _key, _value in orderDict.items():
-            doubled = _value * 2
-            current = doubled % 10
-            incremt = doubled // 10
-            retDict[_key] += current
-            if incremt > 0:
-                retDict[_key+1] += incremt
-        return retDict
-    
+    from subroutines import multiply_by_constant
+
     # run subroutine n times
     num = {0: 1}
     for k in range(0, n):
-        num = multiply_by_2(num)
+        num = multiply_by_constant(num, 2)
     return sum(num.values())  
 
 def Euler_Problem_17(n=1000):
@@ -880,39 +813,12 @@ def Euler_Problem_20(n=100):
     '''
     # 100! is between 10^100 and 10^200, which is too large for typical data types.
     # However, one can easily store by digit.
-    from collections import defaultdict
-    def multiply_by_constant(orderDict, c):
-        '''
-        Subroutine to multiply a number by c.
-        orderDict -- defaultdict of magnitude -> value mapping.
-        Eg. {0: 1, 1: 3, 2: 6} stands for 1*10^1 + 3*10^1 + 6*10^2 = 631.
-        '''
-        retDict = defaultdict(int)
-        for _key, _value in orderDict.items():
-            multiplied = _value * c
-            shift = 0
-            while multiplied > 0 or shift == 0:
-                retDict[_key+shift] += (multiplied % 10)
-                multiplied = multiplied // 10
-                shift += 1
-        return retDict
-
-    def correct_digits(orderDict):
-        '''
-        Promote digits with value greater than or equal to 10.
-        '''
-        retDict = defaultdict(int)
-        for _key, _value in orderDict.items():
-            retDict[_key] += _value % 10
-            if _value >= 10:
-                retDict[_key+1] += _value // 10
-        return retDict
+    from subroutines import multiply_by_constant
 
     # run subroutine n times
     num = {0: 1}
     for k in range(1, n+1):
         num = multiply_by_constant(num, k)
-        num = correct_digits(num)
     return sum(num.values())  
 
 def Euler_Problem_21(n=10000):
@@ -923,34 +829,7 @@ def Euler_Problem_21(n=10000):
     Evaluate the sum of all the amicable numbers under 10000.
     '''
 
-    # subroutine to factorize with dynamic programming
-    def factorize(num, cache):
-        '''
-        Assumes that the factorization of every number less than num has been stored in cache.
-        cache -- a dict of dicts, eg. {2: {2: 1}, 4: {2: 2}, 6: {2: 1, 3: 1}}
-        '''
-        from collections import defaultdict
-        if num < 2:
-            return {}
-        # case 0: num is already in cache
-        if num in cache.keys():
-            return cache[num]
-        # case 1: num has a nontrivial divisor -- copy its factorization and bump
-        trial = 1
-        while trial < num:
-            trial += 1
-            factor = num / trial
-            if factor in cache.keys():
-                # remark: one could get away with storing just trial and factor, and then use a reconstruction method, to reduce memory usage from questionaly O(n logn) to O(n), where n is the largest number to be factorized.
-                _factorization = defaultdict(int)
-                _factorization.update(cache[factor])
-                _factorization[trial] += 1
-                cache[num] = _factorization
-                return _factorization
-        # case 2: num is a prime -- add new factorization to cache
-        _factorization = {num: 1}
-        cache[num] = _factorization 
-        return _factorization
+    from subroutines import factorize_with_cache
 
     def get_sum_proper_divisors(factorization):
         '''
@@ -965,18 +844,12 @@ def Euler_Problem_21(n=10000):
         return sum_divisors - original_number
 
     def check_amicable(a, cache):
-        a_factorization = factorize(a, cache)
+        a_factorization = factorize_with_cache(a, cache)
         b = get_sum_proper_divisors(a_factorization)
-        b_factorization = factorize(b, cache)
+        b_factorization = factorize_with_cache(b, cache)
         if a == get_sum_proper_divisors(b_factorization) and a != b:
             return (a, b)
         return False
-
-    def test():
-        cache = {}
-        for k in range(2, 20):
-            print(k, get_sum_proper_divisors(factorize(k, cache)))
-            print(220, check_amicable(220, cache))
 
     # initialize cache
     cache_factorizations = {}
