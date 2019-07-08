@@ -380,16 +380,7 @@ def Euler_Problem_12(n=500):
     We can see that 28 is the first triangle number to have over five divisors.
     What is the value of the first triangle number to have over five hundred divisors?
     '''
-    from subroutines import factorize_with_cache
-
-    def get_num_divisors(factorization):
-        '''
-        Determine the number of different divisors given a factorization.
-        '''
-        from functools import reduce
-        powers = list(factors.values())
-        num_divisors = reduce(lambda x, y: x * y, [_p + 1 for _p in powers])
-        return num_divisors
+    from subroutines import factorize_with_cache, get_num_divisors
 
     # initialize cache
     cache_factorizations = {}
@@ -829,19 +820,7 @@ def Euler_Problem_21(n=10000):
     Evaluate the sum of all the amicable numbers under 10000.
     '''
 
-    from subroutines import factorize_with_cache
-
-    def get_sum_proper_divisors(factorization):
-        '''
-        Determine the sum of proper divisors given a factorization.
-        '''
-        sum_divisors = 1
-        original_number = 1
-        for _base, _power in factorization.items():
-            factors = [_base ** k for k in range(0, _power+1)]
-            sum_divisors *= sum(factors)
-            original_number *= (_base ** _power)
-        return sum_divisors - original_number
+    from subroutines import factorize_with_cache, get_sum_proper_divisors
 
     def check_amicable(a, cache):
         a_factorization = factorize_with_cache(a, cache)
@@ -888,4 +867,47 @@ def Euler_Problem_22():
 
     scores = [(i+1) * name_to_score(_name) for i, _name in enumerate(names)]
     return sum(scores)
+
+def Euler_Problem_23():
+    '''
+    A perfect number is a number for which the sum of its proper divisors is exactly equal to the number. For example, the sum of the proper divisors of 28 would be 1 + 2 + 4 + 7 + 14 = 28, which means that 28 is a perfect number.
+    A number n is called deficient if the sum of its proper divisors is less than n and it is called abundant if this sum exceeds n.
+    As 12 is the smallest abundant number, 1 + 2 + 3 + 4 + 6 = 16, the smallest number that can be written as the sum of two abundant numbers is 24. By mathematical analysis, it can be shown that all integers greater than 28123 can be written as the sum of two abundant numbers. However, this upper limit cannot be reduced any further by analysis even though it is known that the greatest number that cannot be expressed as the sum of two abundant numbers is less than this limit.
+    Find the sum of all the positive integers which cannot be written as the sum of two abundant numbers.
+    '''
+    from subroutines import factorize_with_cache, get_sum_proper_divisors
+    cache_factorizations = {}
+    
+    def is_abundant(num):
+        factorization = factorize_with_cache(num, cache_factorizations)
+        sum_proper_divisors = get_sum_proper_divisors(factorization)
+        if sum_proper_divisors > num:
+            return True
+        else:
+            return False
+
+    def is_sum_of_two_abundant(candidate, abundants):
+        '''
+        Determine whether candidate is the sum of two abundant numbers.
+        abundants -- dict with abundant numbers as keys.
+        '''
+        for a in abundants.keys():
+            b = candidate - a
+            if b in abundants.keys():
+                return True
+        return False
+
+    # determine abundant numbers that are below the analytic bound
+    abundant_numbers = dict()
+    for k in range(0, 28123):
+        if is_abundant(k):
+            abundant_numbers[k] = 1
+
+    # determine which numbers cannot be written as a sum of two abundant numbers
+    not_sum_of_two_abundant = []
+    for s in range(0, 28123):
+        if not is_sum_of_two_abundant(s, abundant_numbers):
+            not_sum_of_two_abundant.append(s)
+    
+    return sum(not_sum_of_two_abundant)
 
