@@ -911,3 +911,25 @@ def Euler_Problem_23():
     
     return sum(not_sum_of_two_abundant)
 
+def Euler_Problem_24(digits=['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'], n=1000000):
+    '''
+    A permutation is an ordered arrangement of objects. For example, 3124 is one possible permutation of the digits 1, 2, 3 and 4. If all of the permutations are listed numerically or alphabetically, we call it lexicographic order. The lexicographic permutations of 0, 1 and 2 are:
+    012   021   102   120   201   210
+    What is the millionth lexicographic permutation of the digits 0, 1, 2, 3, 4, 5, 6, 7, 8 and 9?
+    '''
+    # insight: there are 10 numbers from 0 to 9, i.e. 10! = 3628800 permutations.
+    # -> there are 362880 such permutations that start with 0.
+    # -> there are 1086400 such permutations that start with 0, 1, or 2. 
+    from subroutines import factorial
+
+    assert factorial(len(digits)) > n - 1
+    permutation = ''
+    digits_left = digits[:] 
+    perm_position = n - 1
+    while len(digits_left) > 0:
+        perms_per_first_digit = factorial(len(digits_left) - 1)
+        next_idx = perm_position // perms_per_first_digit
+        permutation += digits_left.pop(next_idx)
+        perm_position -= next_idx * perms_per_first_digit
+    return permutation
+        

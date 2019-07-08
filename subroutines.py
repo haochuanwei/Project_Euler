@@ -55,6 +55,27 @@ def factorize_with_cache(num, cache):
     cache[num] = _factorization 
     return _factorization
 
+def get_num_divisors(factorization):
+    '''
+    Determine the number of different divisors given a factorization.
+    '''
+    from functools import reduce
+    powers = list(factors.values())
+    num_divisors = reduce(lambda x, y: x * y, [_p + 1 for _p in powers])
+    return num_divisors
+
+def get_sum_proper_divisors(factorization):
+    '''
+    Determine the sum of proper divisors given a factorization.
+    '''
+    sum_divisors = 1
+    original_number = 1
+    for _base, _power in factorization.items():
+        factors = [_base ** k for k in range(0, _power+1)]
+        sum_divisors *= sum(factors)
+        original_number *= (_base ** _power)
+    return sum_divisors - original_number
+
 def multiply_by_constant(orderDict, c):
     '''
     Subroutine to multiply a number by c.
@@ -82,3 +103,15 @@ def multiply_by_constant(orderDict, c):
             multiplied = multiplied // 10
             shift += 1
     return correct_digits(retDict)
+
+def factorial(n):
+    '''
+    Factorial.
+    '''
+    assert isinstance(n, int) and n >= 0
+    if n == 0:
+        return 1
+    else:
+        return n * factorial(n-1)
+
+
