@@ -963,6 +963,56 @@ def Euler_Problem_25(n=1000):
     diff_index = ((n-1) * log(10) - log_10th_term) / log_ratio
     return ceil(diff_index) + 10
 
+def Euler_Problem_26(n=1000):
+    '''
+    A unit fraction contains 1 in the numerator. The decimal representation of the unit fractions with denominators 2 to 10 are given:
+    1/2	= 	0.5
+    1/3	= 	0.(3)
+    1/4	= 	0.25
+    1/5	= 	0.2
+    1/6	= 	0.1(6)
+    1/7	= 	0.(142857)
+    1/8	= 	0.125
+    1/9	= 	0.(1)
+    1/10= 	0.1
+    Where 0.1(6) means 0.166666..., and has a 1-digit recurring cycle. It can be seen that 1/7 has a 6-digit recurring cycle.
+    Find the value of d < 1000 for which 1/d contains the longest recurring cycle in its decimal fraction part.
+    '''
+    # a bit of mathematical insight is helpful here.
+    # if d is divisible by 2 or 5, d has the same number of digits in the 1/d recurring cycle as (d/2) or (d/5) respectively.
+    # assuming that d is not divisible by 2 or 5, then the smallest m with (10^m - 1) divisible by d gives the length of the recurring cycle.
+
+    def remove_2_5_factors(num):
+        '''
+        Divide a number by 2 and 5 until it becomes coprime with 2 and 5.
+        '''
+        if num % 2 == 0:
+            return remove_2_5_factors(num // 2)
+        if num % 5 == 0:
+            return remove_2_5_factors(num // 5)
+        return num
+
+    cache_cycle_length = {}
+    for d in range(2, n):
+        d_equivalent = remove_2_5_factors(d)
+        # base case: d has no prime factors other than 2 and 5
+        if d_equivalent == 1:
+            cache_cycle_length[d] = 0
+        # recursive case: d is divisible by 2 or 5 but has other prime factors
+        elif d_equivalent in cache_cycle_length.keys():
+            cache_cycle_length[d] = cache_cycle_length[d_equivalent]
+        # base case: d is not divisible by 2 or 5
+        else:
+            # one should be alerted if the for loop fails to update the cycle length.
+            cache_cycle_length[d] = -1
+            for m in range(1, 1000):
+                if (10**m - 1) % d == 0:
+                    cache_cycle_length[d] = m
+                    break
+    if min(cache_cycle_length.values()) < 0:
+        print('Warning: some number has longer cycle length than we screened for.')
+    d_to_return = max(cache_cycle_length.keys(), key=lambda x: cache_cycle_length[x])
+    return d_to_return, cache_cycle_length[d_to_return]
 
 
 
