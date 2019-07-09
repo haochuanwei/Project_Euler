@@ -932,4 +932,37 @@ def Euler_Problem_24(digits=['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'], 
         permutation += digits_left.pop(next_idx)
         perm_position -= next_idx * perms_per_first_digit
     return permutation
-        
+       
+def Euler_Problem_25(n=1000):
+    '''
+    The Fibonacci sequence is defined by the recurrence relation:
+    Fn = Fn-1 + Fn-2, where F1 = 1 and F2 = 1.
+    Hence the first 12 terms will be:
+    F1 = 1
+    F2 = 1
+    F3 = 2
+    F4 = 3
+    F5 = 5
+    F6 = 8
+    F7 = 13
+    F8 = 21
+    F9 = 34
+    F10 = 55
+    F11 = 89
+    F12 = 144
+    The 12th term, F12, is the first term to contain three digits.
+    What is the index of the first term in the Fibonacci sequence to contain 1000 digits?
+    '''
+    # a geometric series with a common ratio of (sqrt(5)+1)/2 is an excellent numerical approximation of the Fibonacci sequence.
+    
+    from math import sqrt, log, exp, ceil
+    # use F8 thru F12 to estimate the log of the 10th term of the geometric series
+    log_10th_term = (log(21) + log(34) + log(55) + log(89) + log(144)) / 5
+    log_ratio = log((sqrt(5) + 1) / 2)
+    # n digits is on the order of 10^(n-1)
+    diff_index = ((n-1) * log(10) - log_10th_term) / log_ratio
+    return ceil(diff_index) + 10
+
+
+
+
