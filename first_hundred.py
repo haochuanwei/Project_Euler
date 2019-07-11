@@ -1014,5 +1014,63 @@ def Euler_Problem_26(n=1000):
     d_to_return = max(cache_cycle_length.keys(), key=lambda x: cache_cycle_length[x])
     return d_to_return, cache_cycle_length[d_to_return]
 
+def Euler_Problem_27(k=1000):
+    '''
+    Euler discovered the remarkable quadratic formula:
+    n2+n+41
+    It turns out that the formula will produce 40 primes for the consecutive integer values 0<=n<=39. However, when n=40,402+40+41=40(40+1)+41 is divisible by 41, and certainly when n=41,412+41+41 is clearly divisible by 41.
+    The incredible formula n^2-79n+1601 was discovered, which produces 80 primes for the consecutive values 0<=n<=79. The product of the coefficients, -79 and 1601, is -126479.
+    Considering quadratics of the form:
+    n^2+an+b, where |a|<1000 and |b|<=1000
+    where |n| is the modulus/absolute value of n
+    e.g. |11|=11 and |-4|=4
+    Find the product of the coefficients, a and b, for the quadratic expression that produces the maximum number of primes for consecutive values of n, starting with n=0.
+    '''
+    # consider the n=0 and n=1 cases. b must be a prime number, thus positive; 1+a+b must be a prime number, so a > -b. 
+    # n^2+an must be consistently even or consistently odd, but it can only be consistently even (because 'consistently odd' cannot happen no matter what a is). This also implies that both a and b need to be odd.
+    # -> idea: first determine all the possible values of b. Then for each b, there are O(b) values to a to try.
 
+    from subroutines import factorize_with_cache
+    def is_prime(factorization):
+        if len(factorization.keys()) == 1:
+            if list(factorization.values())[0] == 1:
+                return True
+        return False
+
+    def prime_quadratic_sequence(a, b, cache):
+        '''
+        Determine the sequence of primes n^2+an+b parametrized by a and b. Uses a cache to read and store factorizations.
+        '''
+        n = 0
+        terms = []
+        while True:
+            _term = n * (n + a) + b
+            _term_factorization = factorize_with_cache(_term, cache)
+            if is_prime(_term_factorization):
+                n += 1
+                terms.append(_term)
+            else:
+                break
+        return terms
+
+    odd_primes_under_k = []
+    cache_factorizations = {}
+    # scan for odd primes as possible values of b. 
+    for _trial in range(3, k+1):
+        _factorization = factorize_with_cache(_trial, cache_factorizations)
+        if is_prime(_factorization):
+            odd_primes_under_k.append(_trial)
+                
+    # loop over possible values of b
+    max_length = 0
+    best_tuple = None
+    best_sequence = None
+    for _b in odd_primes_under_k:
+        for _a in range(-1 * _b, k + 1, 2):
+            sequence = prime_quadratic_sequence(_a, _b, cache_factorizations)
+            if len(sequence) > max_length:
+                max_length = len(sequence)
+                best_tuple = (_a, _b)
+                best_sequence = sequence[:]
+    return max_length, best_tuple, best_sequence
 
