@@ -1074,3 +1074,31 @@ def Euler_Problem_27(k=1000):
                 best_sequence = sequence[:]
     return max_length, best_tuple, best_sequence
 
+def Euler_Problem_28(n=1001):
+    '''
+    Starting with the number 1 and moving to the right in a clockwise direction a 5 by 5 spiral is formed as follows:
+    21 22 23 24 25
+    20  7  8  9 10
+    19  6  1  2 11
+    18  5  4  3 12
+    17 16 15 14 13
+    It can be verified that the sum of the numbers on the diagonals is 101.
+    What is the sum of the numbers on the diagonals in a 1001 by 1001 spiral formed in the same way?
+    '''
+    # insight: we can totally get away with flattening the spiral. Then we are essentially trying to find the sum of a subsequence with a certain spacing pattern.
+    # more insight: for each square, the average of the four elements in the corners equals the middle element on the left side.
+    # 3^2 - (3^2 - 1^2) * (3/8) = 3^2 * (5/8) + 1^2 * (3/8) = 6
+    # 5^2 - (5^2 - 3^2) * (3/8) = 5^2 * (5/8) + 3^2 * (3/8) = 19
+    
+    def sum_corners(side_length):
+        assert side_length % 2 == 1
+        if side_length == 1:
+            return 1
+        return 4 * int(side_length ** 2 * (5/8) + (side_length - 2) ** 2 * (3/8))
+
+    # add contribution from each layer
+    total = 0
+    for k in range(1, n+1, 2):
+        total += sum_corners(k)
+
+    return total
