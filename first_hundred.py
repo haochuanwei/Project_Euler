@@ -1145,3 +1145,34 @@ def Euler_Problem_29():
             all_powers.append(json.dumps(a_to_the_b_th, sort_keys=True))
     all_powers = [json.loads(_p) for _p in list(set(all_powers))]
     return [restore_from_factorization(_p) for _p in all_powers]
+
+def Euler_Problem_30(k=5):
+    '''
+    Surprisingly there are only three numbers that can be written as the sum of fourth powers of their digits:
+    1634 = 1^4 + 6^4 + 3^4 + 4^4
+    8208 = 8^4 + 2^4 + 0^4 + 8^4
+    9474 = 9^4 + 4^4 + 7^4 + 4^4
+    As 1 = 1^4 is not a sum it is not included.
+    The sum of these numbers is 1634 + 8208 + 9474 = 19316.
+    Find the sum of all the numbers that can be written as the sum of fifth powers of their digits.
+    '''
+    def is_sum_of_digit_powers(num, power):
+        '''
+        Check if a number equals the sum of powers of its digits.
+        '''
+        digits = [int(_d) for _d in list(str(num))]
+        sumpow = sum([_d ** power for _d in digits])
+        if num == sumpow:
+            return True
+        else:
+            return False
+
+    num_that_meet_criterion = []
+    # k * 10 ^ k is an upper bound for numbers that can meet the criterion
+    for num in range(10, k * 10 ** k):
+        if is_sum_of_digit_powers(num, k):
+            num_that_meet_criterion.append(num)
+
+    return num_that_meet_criterion
+
+
