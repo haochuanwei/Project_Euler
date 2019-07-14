@@ -55,6 +55,15 @@ def factorize_with_cache(num, cache):
     cache[num] = _factorization 
     return _factorization
 
+def restore_from_factorization(factorization):
+    '''
+    Restore the original number from a factorization.
+    '''
+    retval = 1
+    for _base, _power in factorization.items():
+        retval *= (int(_base) ** int(_power))
+    return retval
+
 def get_num_divisors(factorization):
     '''
     Determine the number of different divisors given a factorization.
