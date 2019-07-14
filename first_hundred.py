@@ -1175,4 +1175,48 @@ def Euler_Problem_30(k=5):
 
     return num_that_meet_criterion
 
+def Euler_Problem_31(n=200):
+    '''
+    In England the currency is made up of pound, £, and pence, p, and there are eight coins in general circulation:
+    1p, 2p, 5p, 10p, 20p, 50p, £1 (100p) and £2 (200p).
+    It is possible to make £2 in the following way:
+    1*£1 + *50p + 2*20p + 1*5p + 1*2p + 3*1p
+    How many different ways can £2 be made using any number of coins?
+    '''
+    from collections import defaultdict
+    # define what values can a single coin take
+    units = [1, 2, 5, 10, 20, 50, 100, 200]
 
+    # keep a cache of the different ways a value can be composed from
+    cache_combinations = {0: [{}]}
+
+    def bump(combination, value):
+        '''
+        Add a coin to a combination.
+        combination -- str-to-int mapping, e.g. {'1': 2} for 2*1p coins.
+        '''
+        new_combination = defaultdict(int)
+        new_combination.update(combination)
+        new_combination[value] += 1
+        return new_combination
+
+    # just like DP but greedily, define recursion with cache
+    def subproblem(m, cache):
+        '''
+        Compute all the number of ways to get to m pences.
+        '''
+        import json
+        if m in cache.keys():
+            return cache[m]
+        else:
+            combinations = []
+            for _unit in units:
+                if m >= _unit:
+                    for _combination in subproblem(m - _unit, cache):
+                        combinations.append(json.dumps(bump(_combination, str(_unit)), sort_keys=True))
+            combinations = [json.loads(_d) for _d in list(set(combinations))]
+            cache[m] = combinations
+            print(m)
+            return combinations
+    
+    return subproblem(n, cache_combinations)
