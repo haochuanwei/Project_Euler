@@ -1220,3 +1220,29 @@ def Euler_Problem_31(n=200):
             return combinations
     
     return subproblem(n, cache_combinations)
+
+def Euler_Problem_32():
+    '''
+    We shall say that an n-digit number is pandigital if it makes use of all the digits 1 to n exactly once; for example, the 5-digit number, 15234, is 1 through 5 pandigital.
+    The product 7254 is unusual, as the identity, 39 * 186 = 7254, containing multiplicand, multiplier, and product is 1 through 9 pandigital.
+    Find the sum of all products whose multiplicand/multiplier/product identity can be written as a 1 through 9 pandigital.
+    HINT: Some products can be obtained in more than one way so be sure to only include it once in your sum.
+    '''
+    # brute-force scan as this problem has bounded complexity
+    from collections import defaultdict
+    pandigital_products = []
+    for first_number in range(1, 100):
+        for second_number in range(100, 10000):
+            product = first_number * second_number
+            digit_count = defaultdict(int)
+            for num in [first_number, second_number, product]:
+                list_form = list(str(num))
+                for _digit in list_form:
+                    digit_count[_digit] += 1
+            if '0' not in digit_count.keys() and len(digit_count.keys()) == 9 and sum(digit_count.values()) == 9:
+                #print(first_number, second_number, product, digit_count)
+                pandigital_products.append(product)
+
+    pandigital_products = list(set(pandigital_products))
+    return pandigital_products
+
