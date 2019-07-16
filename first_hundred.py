@@ -1246,3 +1246,27 @@ def Euler_Problem_32():
     pandigital_products = list(set(pandigital_products))
     return pandigital_products
 
+def Euler_Problem_33():
+    '''
+    The fraction 49/98 is a curious fraction, as an inexperienced mathematician in attempting to simplify it may incorrectly believe that 49/98 = 4/8, which is correct, is obtained by cancelling the 9s.
+    We shall consider fractions like, 30/50 = 3/5, to be trivial examples.
+    There are exactly four non-trivial examples of this type of fraction, less than one in value, and containing two digits in the numerator and denominator.
+    If the product of these four fractions is given in its lowest common terms, find the value of the denominator.
+    '''
+    suitable_fractions = []
+    for common_digit in range(1, 10):
+        for numer_digit in range(1, 10):
+            # the fraction has to be less than one
+            for denom_digit in range(numer_digit+1, 10):
+                numer_candidates = [10 * common_digit + numer_digit, 10 * numer_digit + common_digit]
+                denom_candidates = [10 * common_digit + denom_digit, 10 * denom_digit + common_digit]
+                for numer in numer_candidates:
+                    for denom in denom_candidates:
+                        fraction = numer / denom
+                        if fraction == numer_digit / denom_digit:
+                            suitable_fractions.append((numer, denom))
+    return suitable_fractions    
+
+
+
+
