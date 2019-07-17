@@ -1030,12 +1030,7 @@ def Euler_Problem_27(k=1000):
     # n^2+an must be consistently even or consistently odd, but it can only be consistently even (because 'consistently odd' cannot happen no matter what a is). This also implies that both a and b need to be odd.
     # -> idea: first determine all the possible values of b. Then for each b, there are O(b) values to a to try.
 
-    from subroutines import factorize_with_cache
-    def is_prime(factorization):
-        if len(factorization.keys()) == 1:
-            if list(factorization.values())[0] == 1:
-                return True
-        return False
+    from subroutines import factorize_with_cache, is_prime_given_factorization
 
     def prime_quadratic_sequence(a, b, cache):
         '''
@@ -1046,7 +1041,7 @@ def Euler_Problem_27(k=1000):
         while True:
             _term = n * (n + a) + b
             _term_factorization = factorize_with_cache(_term, cache)
-            if is_prime(_term_factorization):
+            if is_prime_given_factorization(_term_factorization):
                 n += 1
                 terms.append(_term)
             else:
@@ -1058,7 +1053,7 @@ def Euler_Problem_27(k=1000):
     # scan for odd primes as possible values of b. 
     for _trial in range(3, k+1):
         _factorization = factorize_with_cache(_trial, cache_factorizations)
-        if is_prime(_factorization):
+        if is_prime_given_factorization(_factorization):
             odd_primes_under_k.append(_trial)
                 
     # loop over possible values of b
@@ -1286,4 +1281,43 @@ def Euler_Problem_34():
             suitable_numbers.append(num)
     return suitable_numbers
 
+def Euler_Problem_35(n=1000000):
+    '''
+    The number, 197, is called a circular prime because all rotations of the digits: 197, 971, and 719, are themselves prime.
+    There are thirteen such primes below 100: 2, 3, 5, 7, 11, 13, 17, 31, 37, 71, 73, 79, and 97.
+    How many circular primes are there below one million?
+    '''
+    from subroutines import factorize_with_cache, is_prime_with_cache
 
+    def rotate(num):
+        '''
+        Rotate digits of a number and return all possibilities.
+        '''
+        str_form = str(num)
+        return [int(str_form[i:] + str_form[:i]) for i in range(len(str_form))]
+
+    # first brute-force all the primes in the range
+    # use a dict for quick lookup
+    cache_primes = []
+    primes_dict_form = {}
+    for num in range(2, n):
+        if num % 10000 == 0:
+            print(num)
+        if is_prime_with_cache(num, cache_primes):
+            primes_dict_form[num] = 1
+
+    # use another dict to deduplicate
+    circular_primes = {}
+    for _p in primes_dict_form.keys():
+        rotations = rotate(_p)
+        # determine if _p is a circular prime
+        _circular = True
+        for _q in rotations:
+            if not _q in primes_dict_form.keys():
+                _circular = False
+        # if circular, collect the numbers 
+        if _circular:
+            for _q in rotations:
+                circular_primes[_q] = 1
+
+    return list(circular_primes.keys())

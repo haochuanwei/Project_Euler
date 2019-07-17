@@ -123,4 +123,28 @@ def factorial(n):
     else:
         return n * factorial(n-1)
 
+def is_prime_given_factorization(factorization):
+    '''
+    Given a factorization dict, determine if the original number is a prime.
+    '''
+    if len(factorization.keys()) == 1:
+        if list(factorization.values())[0] == 1:
+            return True
+    return False
+
+def is_prime_with_cache(num, cache):
+    '''
+    Given a cache of primes below a number, determine if it is prime.
+    The cache must be of increasing order.
+    '''
+    from math import sqrt, ceil
+    trial = 2
+    for _p in cache:
+        assert _p < num
+        if _p > ceil(sqrt(num)):
+            break
+        if num % _p == 0:
+            return False
+    cache.append(num) 
+    return True        
 
