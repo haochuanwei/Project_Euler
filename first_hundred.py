@@ -1267,6 +1267,23 @@ def Euler_Problem_33():
                             suitable_fractions.append((numer, denom))
     return suitable_fractions    
 
-
+def Euler_Problem_34():
+    '''
+    145 is a curious number, as 1! + 4! + 5! = 1 + 24 + 120 = 145.
+    Find the sum of all numbers which are equal to the sum of the factorial of their digits.
+    Note: as 1! = 1 and 2! = 2 are not sums they are not included.
+    '''
+    from subroutines import factorial
+    def sum_of_digit_factorials(num):
+        return sum([factorial(int(_d)) for _d in list(str(num))])
+    # 9! = 362880 < 10^6, so a number with p digits corresponds to a number bounded by p * 10^6.
+    # -> the maximum value of p is 7. Simple brute-force solution works.
+    suitable_numbers = []
+    for num in range(3, 10 ** 7):
+        #if num % 10000 == 0:
+        #    print(num)
+        if num == sum_of_digit_factorials(num):
+            suitable_numbers.append(num)
+    return suitable_numbers
 
 
