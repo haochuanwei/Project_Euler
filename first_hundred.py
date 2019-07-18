@@ -1321,3 +1321,22 @@ def Euler_Problem_35(n=1000000):
                 circular_primes[_q] = 1
 
     return list(circular_primes.keys())
+
+def Euler_Problem_36(n=1000000):
+    '''
+    The decimal number, 585 = 1001001001_2 (binary), is palindromic in both bases.
+    Find the sum of all numbers, less than one million, which are palindromic in base 10 and base 2.
+    (Please note that the palindromic number, in either base, may not include leading zeros.)
+    '''
+    from subroutines import is_a_palindrome
+    def base_10_to_binary(num):
+        return int(bin(num)[2:])
+
+    double_palindromes = []
+    for k in range(1, n):
+        binary_form = base_10_to_binary(k)
+        if is_a_palindrome(k) and is_a_palindrome(binary_form):
+            double_palindromes.append(k)
+    
+    return double_palindromes
+    
