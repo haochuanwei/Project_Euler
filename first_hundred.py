@@ -1287,7 +1287,7 @@ def Euler_Problem_35(n=1000000):
     There are thirteen such primes below 100: 2, 3, 5, 7, 11, 13, 17, 31, 37, 71, 73, 79, and 97.
     How many circular primes are there below one million?
     '''
-    from subroutines import factorize_with_cache, is_prime_with_cache
+    from subroutines import all_primes_under
 
     def rotate(num):
         '''
@@ -1296,24 +1296,16 @@ def Euler_Problem_35(n=1000000):
         str_form = str(num)
         return [int(str_form[i:] + str_form[:i]) for i in range(len(str_form))]
 
-    # first brute-force all the primes in the range
-    # use a dict for quick lookup
-    cache_primes = []
-    primes_dict_form = {}
-    for num in range(2, n):
-        if num % 10000 == 0:
-            print(num)
-        if is_prime_with_cache(num, cache_primes):
-            primes_dict_form[num] = 1
+    primes = all_primes_under(n)
 
-    # use another dict to deduplicate
+    # use a dict to deduplicate
     circular_primes = {}
-    for _p in primes_dict_form.keys():
+    for _p in primes:
         rotations = rotate(_p)
         # determine if _p is a circular prime
         _circular = True
         for _q in rotations:
-            if not _q in primes_dict_form.keys():
+            if not _q in primes:
                 _circular = False
         # if circular, collect the numbers 
         if _circular:
@@ -1339,4 +1331,50 @@ def Euler_Problem_36(n=1000000):
             double_palindromes.append(k)
     
     return double_palindromes
-    
+   
+def Euler_Problem_37(bound=1000000):
+    '''
+    The number 3797 has an interesting property. Being prime itself, it is possible to continuously remove digits from left to right, and remain prime at each stage: 3797, 797, 97, and 7. Similarly we can work from right to left: 3797, 379, 37, and 3.
+    Find the sum of the only eleven primes that are both truncatable from left to right and right to left.
+    NOTE: 2, 3, 5, and 7 are not considered to be truncatable primes.
+    '''
+    from subroutines import all_primes_under
+
+    def get_truncations(num):
+        '''
+        Truncate the digits of a number and return all possibilities.
+        '''
+        str_form = str(num)
+        truncations = [num]
+        for start_index in range(1, len(str_form)):
+                substring_l = str_form[:start_index]
+                substring_r = str_form[start_index:]
+                truncations.append(int(substring_l))
+                truncations.append(int(substring_r))
+        return list(set(truncations))
+
+    print(get_truncations(2397))
+
+    primes = all_primes_under(bound)
+
+    truncatable_primes = dict()
+    for _p in primes:
+        # base case: exclude primes that have only one digit
+        if _p < 10:
+            continue
+        # for other numbers, consider all truncations
+        truncations = get_truncations(_p)
+        truncatable = True
+        for _t in truncations:
+            if not _t in primes:
+                truncatable = False
+                break
+        if truncatable:
+            truncatable_primes[_p] = 1
+    return list(truncatable_primes.keys())
+
+
+
+
+
+

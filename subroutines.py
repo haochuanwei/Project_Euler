@@ -148,3 +148,14 @@ def is_prime_with_cache(num, cache):
     cache.append(num) 
     return True        
 
+def all_primes_under(n):
+    '''
+    Compute all the prime numbers below n.
+    '''
+    # first use a list for keeping primes in increasing order
+    cache_primes = []
+    for num in range(2, n):
+        is_prime_with_cache(num, cache_primes)
+    # return a set for quick lookup
+    return set(cache_primes)
+
