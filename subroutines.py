@@ -132,30 +132,44 @@ def is_prime_given_factorization(factorization):
             return True
     return False
 
-def is_prime_with_cache(num, cache):
-    '''
-    Given a cache of primes below a number, determine if it is prime.
-    The cache must be of increasing order.
-    '''
-    from math import sqrt, ceil
-    trial = 2
-    for _p in cache:
-        assert _p < num
-        if _p > ceil(sqrt(num)):
-            break
-        if num % _p == 0:
-            return False
-    cache.append(num) 
-    return True        
-
 def all_primes_under(n):
     '''
     Compute all the prime numbers below n.
     '''
+    def is_prime_with_cache(num, cache):
+        '''
+        This is a subroutine for dynamic programming.
+        Given a cache of primes below a number, determine if it is prime.
+        The cache must be of increasing order.
+        '''
+        from math import sqrt, ceil
+        trial = 2
+        for _p in cache:
+            assert _p < num
+            if _p > ceil(sqrt(num)):
+                break
+            if num % _p == 0:
+                return False
+        cache.append(num) 
+        return True        
+
     # first use a list for keeping primes in increasing order
     cache_primes = []
     for num in range(2, n):
         is_prime_with_cache(num, cache_primes)
     # return a set for quick lookup
     return set(cache_primes)
+
+def is_1_to_9_pandigital(num):
+    '''
+    Determine if a number is 1-to-9 pandigital.
+    '''
+    from collections import defaultdict
+    digit_count = defaultdict(int)
+    list_form = list(str(num))
+    for _digit in list_form:
+        digit_count[_digit] += 1
+    if '0' not in digit_count.keys() and len(digit_count.keys()) == 9 and sum(digit_count.values()) == 9:
+        return True
+    return False
 

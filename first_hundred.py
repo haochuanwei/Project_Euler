@@ -1223,19 +1223,15 @@ def Euler_Problem_32():
     Find the sum of all products whose multiplicand/multiplier/product identity can be written as a 1 through 9 pandigital.
     HINT: Some products can be obtained in more than one way so be sure to only include it once in your sum.
     '''
+    from subroutines import is_1_to_9_pandigital
     # brute-force scan as this problem has bounded complexity
-    from collections import defaultdict
     pandigital_products = []
     for first_number in range(1, 100):
         for second_number in range(100, 10000):
             product = first_number * second_number
-            digit_count = defaultdict(int)
-            for num in [first_number, second_number, product]:
-                list_form = list(str(num))
-                for _digit in list_form:
-                    digit_count[_digit] += 1
-            if '0' not in digit_count.keys() and len(digit_count.keys()) == 9 and sum(digit_count.values()) == 9:
-                #print(first_number, second_number, product, digit_count)
+            concatenated = ''.join(list(map(str, [first_number, second_number, product])))
+            if is_1_to_9_pandigital(concatenated):
+                print(first_number, second_number, product)
                 pandigital_products.append(product)
 
     pandigital_products = list(set(pandigital_products))
@@ -1373,8 +1369,24 @@ def Euler_Problem_37(bound=1000000):
             truncatable_primes[_p] = 1
     return list(truncatable_primes.keys())
 
-
-
-
-
-
+def Euler_Problem_38():
+    '''
+    Take the number 192 and multiply it by each of 1, 2, and 3:
+    192 × 1 = 192
+    192 × 2 = 384
+    192 × 3 = 576
+    By concatenating each product we get the 1 to 9 pandigital, 192384576. We will call 192384576 the concatenated product of 192 and (1,2,3)
+    The same can be achieved by starting with 9 and multiplying by 1, 2, 3, 4, and 5, giving the pandigital, 918273645, which is the concatenated product of 9 and (1,2,3,4,5).
+    What is the largest 1 to 9 pandigital 9-digit number that can be formed as the concatenated product of an integer with (1,2, ... , n) where n > 1?
+    '''
+    from subroutines import is_1_to_9_pandigital
+    # the greatest number of digits that the base number can have is 4.
+    pandigital_products = []
+    for _base in range(1, 10 ** 4 - 1):
+        # n is bounded between 2 and 9 inclusive
+        for _n in range(2, 10):
+            products = [_base * _v for _v in range(1, _n+1)]
+            concatenated_product = ''.join(list(map(str, products)))
+            if is_1_to_9_pandigital(concatenated_product):
+                pandigital_products.append(concatenated_product)
+    return pandigital_products
