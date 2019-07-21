@@ -173,3 +173,14 @@ def is_1_to_9_pandigital(num):
         return True
     return False
 
+def two_sum(arr, num):
+    '''
+    The two-sum problem where the input array is already in set form.
+    '''
+    combinations = []
+    assert isinstance(arr, set)
+    for a in arr:
+        b = num - a
+        if b >= a and b in arr:
+            combinations.append((a, b))
+    return combinations

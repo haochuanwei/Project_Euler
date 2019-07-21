@@ -1390,3 +1390,30 @@ def Euler_Problem_38():
             if is_1_to_9_pandigital(concatenated_product):
                 pandigital_products.append(concatenated_product)
     return pandigital_products
+
+def Euler_Problem_39(max_perimeter=1000):
+    '''
+    If p is the perimeter of a right angle triangle with integral length sides, {a,b,c}, there are exactly three solutions for p = 120.
+    {20,48,52}, {24,45,51}, {30,40,50}
+    For which value of p ≤ 1000, is the number of solutions maximised?
+    '''
+    # assume a^2 + b^2 = c^2 and a <= b < c.
+    # a + b > c  -> c < (max_perimeter+1) // 2.
+    from math import sqrt, floor, ceil
+    # this upper bound is exclusive
+    upper_bound_c = (max_perimeter+1) // 2
+
+    # first pre-compute perfect squares under c^2.
+    # Then build on top of two-sum to determine Pythagorean sides.
+    from subroutines import two_sum
+    from collections import defaultdict
+    perfect_squares = [_i ** 2 for _i in range(1, upper_bound_c)]
+    perfect_squares_set = set(perfect_squares) 
+    solution_count = defaultdict(int)
+    for c_squared in perfect_squares:
+        a_sq_b_sq_combinations = two_sum(perfect_squares_set, c_squared)
+        for a_squared, b_squared in a_sq_b_sq_combinations:
+            perimeter = int(sqrt(a_squared) + sqrt(b_squared) + sqrt(c_squared))
+            solution_count[perimeter] += 1
+    return max(list(solution_count.keys()), key=lambda x: solution_count[x])
+
