@@ -160,18 +160,27 @@ def all_primes_under(n):
     # return a set for quick lookup
     return set(cache_primes)
 
-def is_1_to_9_pandigital(num):
+def is_1_to_n_pandigital(num, n):
     '''
-    Determine if a number is 1-to-9 pandigital.
+    Determine if a number is 1-to-n pandigital.
     '''
     from collections import defaultdict
     digit_count = defaultdict(int)
     list_form = list(str(num))
     for _digit in list_form:
         digit_count[_digit] += 1
-    if '0' not in digit_count.keys() and len(digit_count.keys()) == 9 and sum(digit_count.values()) == 9:
-        return True
-    return False
+    check_for_digits = list(map(str, list(range(1, n+1))))  
+    # every digit in digit count must be between 1 and n and appear exactly once
+    for _key in digit_count.keys():
+        if not _key in check_for_digits:
+            return False
+        if digit_count[_key] != 1:
+            return False
+    # every digit from 1 to n must be in the digit count
+    for _digit in check_for_digits:
+        if not _digit in digit_count.keys():
+            return False
+    return True
 
 def two_sum(arr, num):
     '''

@@ -1223,14 +1223,14 @@ def Euler_Problem_32():
     Find the sum of all products whose multiplicand/multiplier/product identity can be written as a 1 through 9 pandigital.
     HINT: Some products can be obtained in more than one way so be sure to only include it once in your sum.
     '''
-    from subroutines import is_1_to_9_pandigital
+    from subroutines import is_1_to_n_pandigital
     # brute-force scan as this problem has bounded complexity
     pandigital_products = []
     for first_number in range(1, 100):
         for second_number in range(100, 10000):
             product = first_number * second_number
             concatenated = ''.join(list(map(str, [first_number, second_number, product])))
-            if is_1_to_9_pandigital(concatenated):
+            if is_1_to_n_pandigital(concatenated, 9):
                 print(first_number, second_number, product)
                 pandigital_products.append(product)
 
@@ -1379,7 +1379,7 @@ def Euler_Problem_38():
     The same can be achieved by starting with 9 and multiplying by 1, 2, 3, 4, and 5, giving the pandigital, 918273645, which is the concatenated product of 9 and (1,2,3,4,5).
     What is the largest 1 to 9 pandigital 9-digit number that can be formed as the concatenated product of an integer with (1,2, ... , n) where n > 1?
     '''
-    from subroutines import is_1_to_9_pandigital
+    from subroutines import is_1_to_n_pandigital
     # the greatest number of digits that the base number can have is 4.
     pandigital_products = []
     for _base in range(1, 10 ** 4 - 1):
@@ -1387,7 +1387,7 @@ def Euler_Problem_38():
         for _n in range(2, 10):
             products = [_base * _v for _v in range(1, _n+1)]
             concatenated_product = ''.join(list(map(str, products)))
-            if is_1_to_9_pandigital(concatenated_product):
+            if is_1_to_n_pandigital(concatenated_product, 9):
                 pandigital_products.append(concatenated_product)
     return pandigital_products
 
@@ -1444,3 +1444,18 @@ def Euler_Problem_40():
         retval *= arr[_i - 1]
     return retval
 
+def Euler_Problem_41():
+    '''
+    We shall say that an n-digit number is pandigital if it makes use of all the digits 1 to n exactly once. For example, 2143 is a 4-digit pandigital and is also prime.
+    What is the largest n-digit pandigital prime that exists?
+    '''
+    from subroutines import all_primes_under, is_1_to_n_pandigital
+    # any 9-digit or 8-digit pandigital number must be divisible by 3, because its sum of digits is 45 or 36, respectively
+    # thus the largest n-digit pandigital number cannot have more than 7 digits
+    primes = all_primes_under(10 ** 7)
+    pandigital_primes = []
+    for _p in primes:
+        num_digits = len(str(_p))
+        if is_1_to_n_pandigital(_p, num_digits):
+            pandigital_primes.append(_p)
+    return pandigital_primes
