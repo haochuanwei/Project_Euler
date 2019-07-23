@@ -193,3 +193,16 @@ def two_sum(arr, num):
         if b >= a and b in arr:
             combinations.append((a, b))
     return combinations
+
+def is_a_triangle_number(num):
+    '''
+    Determine if a number is of the form (1/2)n(n+1).
+    '''
+    from math import floor, sqrt
+    assert isinstance(num, int) and num > 0
+    near_sqrt = floor(sqrt(2 * num))
+    if int((1/2) * near_sqrt * (near_sqrt + 1)) == num:
+        return True
+    else:
+        return False
+
