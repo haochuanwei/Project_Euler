@@ -232,3 +232,21 @@ def permutations_m_to_n_str(m, n):
         permutations = add(permutations, str(_d))
     return permutations
 
+def get_triangulars(n):
+    '''
+    Get the first n triangular numbers.
+    '''
+    return [int(i * (i + 1) / 2) for i in range(1, n+1)]
+
+def get_pentagonals(n):
+    '''
+    Get the first n pentagonal numbers.
+    '''
+    return [int(i * (3 * i - 1) / 2) for i in range(1, n+1)]
+
+def get_hexagonals(n):
+    '''
+    Get the first n hexagonal numbers.
+    '''
+    return [int(i * (2 * i - 1)) for i in range(1, n+1)]
+
