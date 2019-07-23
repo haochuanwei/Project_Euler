@@ -160,27 +160,26 @@ def all_primes_under(n):
     # return a set for quick lookup
     return set(cache_primes)
 
-def is_1_to_n_pandigital(num, n):
+def is_m_to_n_pandigital(num, m, n):
     '''
-    Determine if a number is 1-to-n pandigital.
+    Determine if a number is m-to-n pandigital.
     '''
-    from collections import defaultdict
-    digit_count = defaultdict(int)
+    digit_count = dict()
     list_form = list(str(num))
     for _digit in list_form:
-        digit_count[_digit] += 1
-    check_for_digits = list(map(str, list(range(1, n+1))))  
-    # every digit in digit count must be between 1 and n and appear exactly once
-    for _key in digit_count.keys():
-        if not _key in check_for_digits:
+        # return early if any digit shows up more than once
+        if _digit in digit_count.keys():
             return False
-        if digit_count[_key] != 1:
-            return False
-    # every digit from 1 to n must be in the digit count
-    for _digit in check_for_digits:
-        if not _digit in digit_count.keys():
-            return False
-    return True
+        digit_count[_digit] = 1
+    target_count = dict()
+    for _d in range(m, n+1):
+        target_count[str(_d)] = 1
+    # compare two sets
+    if digit_count == target_count:
+        return True
+    else:
+        print(digit_count, target_count)
+        return False
 
 def two_sum(arr, num):
     '''
@@ -205,4 +204,31 @@ def is_a_triangle_number(num):
         return True
     else:
         return False
+
+def permutations_m_to_n_str(m, n):
+    '''
+    Get all permutations of digits between m and n, in string form.
+    Example:
+    permutations_m_to_n_str(1, 3) -> ['123', '132', '213', '231', '312', '321']
+    '''
+    def add(perms, new_digit):
+        '''
+        Add a digit to existing permutations.
+        Assumes that all existing permutations have the same length.
+        '''
+        # base case: no permutation so far
+        if len(perms) < 1:
+            return [new_digit]
+        # common case
+        perm_length = len(perms[0])
+        retlist = []
+        for _perm in perms:
+            new_perms = [(_perm[:i] + new_digit + _perm[i:]) for i in range(0, perm_length)]
+            new_perms.append(_perm + new_digit) 
+            retlist += new_perms
+        return retlist
+    permutations = []
+    for _d in range(m, n+1):
+        permutations = add(permutations, str(_d))
+    return permutations
 
