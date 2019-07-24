@@ -1466,7 +1466,7 @@ def Euler_Problem_42():
     Using words.txt (right click and 'Save Link/Target As...'), a 16K text file containing nearly two-thousand common English words, how many are triangle words?
     '''
     from custom_config import get_attachment_path 
-    from subroutines import is_a_triangle_number
+    from subroutines import is_triangular
     with open(get_attachment_path(42), 'r') as f:
         words = [eval(_x) for _x in f.read().split(',')]
     char_to_int = {
@@ -1481,7 +1481,7 @@ def Euler_Problem_42():
     
     triangle_count = 0
     for _word in words:
-        if is_a_triangle_number(word_to_score(_word)):
+        if is_triangular(word_to_score(_word)):
             triangle_count += 1
     return triangle_count
 
@@ -1573,3 +1573,34 @@ def Euler_Problem_45(trial_index=100000):
             if contributions[_key] == 3:
                 qualified.append(_key)
     return qualified
+
+def Euler_Problem_46(trial_bound=10**6):
+    '''
+    It was proposed by Christian Goldbach that every odd composite number can be written as the sum of a prime and twice a square.
+    9 = 7 + 2×12
+    15 = 7 + 2×22
+    21 = 3 + 2×32
+    25 = 7 + 2×32
+    27 = 19 + 2×22
+    33 = 31 + 2×12
+    It turns out that the conjecture was false.
+    What is the smallest odd composite that cannot be written as the sum of a prime and twice a square?
+    '''
+    from subroutines import all_primes_under
+    from math import sqrt, ceil
+    primes = all_primes_under(trial_bound)
+    twice_squares = [2 * (x ** 2) for x in range(1, ceil(sqrt(trial_bound / 2)))]
+
+    # brute-force all odd composite numbers
+    for candidate in range(9, trial_bound, 2):
+        is_composite = (not candidate in primes)
+        if is_composite:
+            summable = False
+            for _tsq in twice_squares:
+                target = candidate - _tsq
+                if target in primes:
+                    summable = True
+                    break
+            if not summable:
+                return candidate
+    return -1

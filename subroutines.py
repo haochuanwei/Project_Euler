@@ -143,7 +143,6 @@ def all_primes_under(n):
         The cache must be of increasing order.
         '''
         from math import sqrt, ceil
-        trial = 2
         for _p in cache:
             assert _p < num
             if _p > ceil(sqrt(num)):
@@ -193,7 +192,7 @@ def two_sum(arr, num):
             combinations.append((a, b))
     return combinations
 
-def is_a_triangle_number(num):
+def is_triangular(num):
     '''
     Determine if a number is of the form (1/2)n(n+1).
     '''
