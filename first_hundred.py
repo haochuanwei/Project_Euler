@@ -1645,3 +1645,34 @@ def Euler_Problem_48(n=1000):
         retval = Z.add(retval, val)
     return retval
 
+def Euler_Problem_49():
+    '''
+    The arithmetic sequence, 1487, 4817, 8147, in which each of the terms increases by 3330, is unusual in two ways: (i) each of the three terms are prime, and, (ii) each of the 4-digit numbers are permutations of one another.
+    There are no arithmetic sequences made up of three 1-, 2-, or 3-digit primes, exhibiting this property, but there is one other 4-digit increasing sequence.
+    What 12-digit number do you form by concatenating the three terms in this sequence?
+    '''
+    # idea: the 3-term arithmetic sequence problem can be reduced to the two-sum problem.
+    # idea: the permutation check can be reduced to counter dict comparison.
+    from subroutines import all_primes_under, two_sum
+    from collections import Counter
+
+    # compute all primes in range
+    primes_list = all_primes_under(10000)
+    primes = set(primes_list)
+    
+    # check all primes
+    qualified_tuples = []
+    for _p in primes_list:
+        combinations = two_sum(primes, 2 * _p)
+        for _a, _b in combinations:
+            # filter trivial cases
+            if _a == _p or _b == _p:
+                continue
+            # use dict comparison to check permutations
+            if Counter(str(_a)) == Counter(str(_p)) and Counter(str(_b)) == Counter(str(_p)):
+                qualified_tuples.append((_a, _p, _b))
+    return qualified_tuples
+
+
+
+
