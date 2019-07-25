@@ -1626,3 +1626,22 @@ def Euler_Problem_47(k=4, bound=10**6):
         else:
             consecutive_qualified = 0
     return -1
+
+def Euler_Problem_48(n=1000):
+    '''
+    The series, 1^1 + 2^2 + 3^3 + ... + 10^10 = 10405071317.
+
+    Find the last ten digits of the series, 1^1 + 2^2 + 3^3 + ... + 1000^1000.
+    '''
+    from subroutines import Modulos
+
+    # we can perform all computations in Z_(10^10) since we only care about the last ten digits
+    Z = Modulos(10**10)
+    retval = 0
+    for k in range(1, n+1):
+        val = 1
+        for i in range(0, k):
+            val = Z.multiply(val, k)
+        retval = Z.add(retval, val)
+    return retval
+

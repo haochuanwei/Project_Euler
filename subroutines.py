@@ -286,3 +286,20 @@ def get_hexagonals(n):
     '''
     return [int(i * (2 * i - 1)) for i in range(1, n+1)]
 
+class Modulos(object):
+    '''
+    Basic computations in a modulos scope.
+    This is equivalent to the Z_n group.
+    '''
+    def __init__(self, mod):
+        self.__mod = mod
+   
+    def identity(self, num):
+        return num % self.__mod
+
+    def add(self, a, b):
+        return self.identity(a + b)
+
+    def multiply(self, a, b):
+        return self.identity(self.identity(a) * self.identity(b))
+
