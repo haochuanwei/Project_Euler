@@ -1703,4 +1703,51 @@ def Euler_Problem_50(bound=10**6):
                 longest_chain = chain[:]
     return longest_chain
         
+def Euler_Problem_51(common_num_digits=3, target_num_digits=7, target_prime_count=8):
+    '''
+    By replacing the 1st digit of the 2-digit number *3, it turns out that six of the nine possible values: 13, 23, 43, 53, 73, and 83, are all prime.
+    By replacing the 3rd and 4th digits of 56**3 with the same digit, this 5-digit number is the first example having seven primes among the ten generated numbers, yielding the family: 56003, 56113, 56333, 56443, 56663, 56773, and 56993. Consequently 56003, being the first member of this family, is the smallest prime with this property.
+    Find the smallest prime which, by replacing part of the number (not necessarily adjacent digits) with the same digit, is part of an eight prime value family.
+    '''
+    from subroutines import all_primes_under
+    # observation 1: there must be three (or six, or... nine?) digits that are replaced. This is because otherwise, out of the ten numbers there must be at least three that are divisible by 3.
+    # observation 2: the first and last digits are definitely not getting replaced.
+
+    def get_candidates():
+        '''
+        Determine all the groups of numbers that could qualify.
+        '''
+        # first form the same digits
+        candidates = [[common_num_digits * str(_d) for _d in range(0, 10)]]
+        # insert more digits except the last
+        for k in range(0, target_num_digits - common_num_digits - 1):
+            current_num_digits = len(candidates[0])
+            candidates = [[inner[:-i] + str(_d) + inner[-i:] for inner in outer] for outer in candidates for i in range(0, current_num_digits+1) for _d in range(0, 10)]
+        # append the last digit
+        candidates = [[inner + str(_last_d) for inner in outer] for outer in candidates for _last_d in range(1, 10, 2)]
+        # deduplicate candidates
+        candidates = [tuple(outer) for outer in candidates]
+        candidates = list(set(candidates))
+        return candidates
+
+    candidates = get_candidates()
+
+    # get all prime numbers in range
+    primes = set(all_primes_under(10**target_num_digits))
+
+    # brute-force the candidates that we've narrowed down to
+    qualified_groups = []
+    for _ten_numbers in candidates:
+        group_of_primes = []
+        for _num_str in _ten_numbers:
+            # numbers with leading zeros do not count
+            if _num_str[0] == '0':
+                continue
+            # pick up primes and count them
+            if int(_num_str) in primes:
+                group_of_primes.append(int(_num_str))
+        if len(group_of_primes) == target_prime_count:
+            qualified_groups.append(tuple(group_of_primes))
+    return qualified_groups
+
 
