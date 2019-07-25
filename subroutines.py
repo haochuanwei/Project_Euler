@@ -9,6 +9,9 @@ def least_divisor(num, floor=2):
     return trial
 
 def has_nontrivial_divisor(num):
+    '''
+    Determines if a number has a nontrivial divisor.
+    '''
     divisor = least_divisor(num)
     if divisor < num:
         return True
@@ -27,33 +30,68 @@ def is_a_palindrome(num):
             return False
     return True
 
-def factorize_with_cache(num, cache):
+class Factorizer(object):
     '''
-    Assumes that the factorization of every number less than num has been stored in cache.
-    cache -- a dict of dicts, eg. {2: {2: 1}, 4: {2: 2}, 6: {2: 1, 3: 1}}
+    A factorizer that makes use of multiple data structures.
+    This is intended to be efficient for repeated factorizations.
     '''
-    from collections import defaultdict
-    if num < 2:
-        return {}
-    # case 0: num is already in cache
-    if num in cache.keys():
-        return cache[num]
-    # case 1: num has a nontrivial divisor -- copy its factorization and bump
-    trial = 1
-    while trial < num:
-        trial += 1
-        factor = num / trial
-        if factor in cache.keys():
-            # remark: one could get away with storing just trial and factor, and then use a reconstruction method, to reduce memory usage from questionaly O(n logn) to O(n), where n is the largest number to be factorized.
-            _factorization = defaultdict(int)
-            _factorization.update(cache[factor])
-            _factorization[trial] += 1
-            cache[num] = _factorization
+    def __init__(self, bound=10**6):
+        '''
+        Initialize a cache of factorizations and precompute primes.
+        bound -- the bound of numbers that the factorizer is expected to deal with.
+        '''
+        self.bound = bound
+        self.cache = {}
+        self._update_primes()
+
+    def _check_bound(self, num):
+        if num > self.bound:
+            print("{0} exceeded the expected bound {1}. Updating known prime numbers.".format(num, self.bound))
+            self.bound = num * 2
+            self._update_primes()
+
+    def _update_primes(self):
+        '''
+        Update the list and set of primes, up to some bound.
+        '''
+        self.list_primes = all_primes_under(self.bound)
+        self.set_primes  = set(self.list_primes)
+
+    def _least_divisor(self, num):
+        '''
+        Find the least divisor of a number.
+        '''
+        self._check_bound(num)
+        for _p in self.list_primes:
+            if num % _p == 0:
+                return _p
+        raise ValueError("Unexpected behavior: {0} is not divisible by any number from {1}".format(num, self.list_primes))
+
+    def factorize(self, num):
+        '''
+        Factorize a number.
+        '''
+        from collections import defaultdict
+        self._check_bound(num)
+        # case 0: num is too small
+        if num < 2:
+            return {}
+        # case 1: num is already factorized
+        if num in self.cache.keys():
+            return self.cache[num]
+        # case 2: num is a prime
+        if num in self.set_primes:
+            _factorization = {num: 1}
+            self.cache[num] = _factorization
             return _factorization
-    # case 2: num is a prime -- add new factorization to cache
-    _factorization = {num: 1}
-    cache[num] = _factorization 
-    return _factorization
+        # common case: num is a composite number
+        divisor = self._least_divisor(num)
+        factor  = int(num / divisor)
+        _factorization = defaultdict(int)
+        _factorization.update(self.factorize(factor))
+        _factorization[divisor] += 1
+        self.cache[num] = _factorization
+        return _factorization
 
 def restore_from_factorization(factorization):
     '''
@@ -69,7 +107,7 @@ def get_num_divisors(factorization):
     Determine the number of different divisors given a factorization.
     '''
     from functools import reduce
-    powers = list(factors.values())
+    powers = list(factorization.values())
     num_divisors = reduce(lambda x, y: x * y, [_p + 1 for _p in powers])
     return num_divisors
 
@@ -140,7 +178,7 @@ def all_primes_under(n):
         '''
         This is a subroutine for dynamic programming.
         Given a cache of primes below a number, determine if it is prime.
-        The cache must be of increasing order.
+        The cache must be of ascending order.
         '''
         from math import sqrt, ceil
         for _p in cache:
@@ -152,12 +190,11 @@ def all_primes_under(n):
         cache.append(num) 
         return True        
 
-    # first use a list for keeping primes in increasing order
+    # first use a list for keeping primes in ascending order
     cache_primes = []
     for num in range(2, n):
         is_prime_with_cache(num, cache_primes)
-    # return a set for quick lookup
-    return set(cache_primes)
+    return cache_primes[:]
 
 def is_m_to_n_pandigital(num, m, n):
     '''
