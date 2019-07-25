@@ -1673,6 +1673,34 @@ def Euler_Problem_49():
                 qualified_tuples.append((_a, _p, _b))
     return qualified_tuples
 
+def Euler_Problem_50(bound=10**6):
+    '''
+    The prime 41, can be written as the sum of six consecutive primes:
+    41 = 2 + 3 + 5 + 7 + 11 + 13
+    This is the longest sum of consecutive primes that adds to a prime below one-hundred.
+    The longest sum of consecutive primes below one-thousand that adds to a prime, contains 21 terms, and is equal to 953.
+    Which prime, below one-million, can be written as the sum of the most consecutive primes?
+    '''
+    from subroutines import all_primes_under
+    primes_list = all_primes_under(bound)
+    primes = set(primes_list)
 
-
+    longest_chain = []
+    for i, _p in enumerate(primes_list):
+        # initialize the chain that starts with index i
+        j = i
+        partial_sum = 0
+        chain = []
+        # extend chain until partial sum goes out of range
+        while True:
+            chain.append(primes_list[j])
+            partial_sum += primes_list[j]
+            j += 1
+            if partial_sum >= bound or j >= len(primes_list):
+                break
+            # if not out of range, compare with best chain so far
+            if partial_sum in primes and len(chain) > len(longest_chain):
+                longest_chain = chain[:]
+    return longest_chain
+        
 
