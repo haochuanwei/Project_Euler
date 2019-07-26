@@ -1761,3 +1761,24 @@ def Euler_Problem_52():
     # Actually... the first 6 significant digits of 1/7 will do.
     return 142857
 
+def Euler_Problem_53(n=100, threshold=10**6):
+    '''
+    There are exactly ten ways of selecting three from five, 12345:
+    123, 124, 125, 134, 135, 145, 234, 235, 245, and 345
+    In combinatorics, we use the notation, 5C3=10.
+    In general, nCr=n!r!(n−r)!, where r≤n, n!=n×(n−1)×...×3×2×1, and 0!=1.
+    It is not until n=23, that a value exceeds one-million: 23C10=1144066.
+    How many, not necessarily distinct, values of nCr for 1≤n≤100, are greater than one-million?
+    '''
+    from subroutines import Combination
+    comb = Combination()
+
+    # with a cache we can efficiently calculate all the combinations
+    count = 0
+    for m in range(1, n+1):
+        for k in range(0, m+1):
+            if comb.n_choose_k(m, k) > threshold:
+                count += 1
+    return count
+
+

@@ -303,3 +303,34 @@ class Modulos(object):
     def multiply(self, a, b):
         return self.identity(self.identity(a) * self.identity(b))
 
+class Combination(object):
+    '''
+    Calculates n-choose-k combinations.
+    Uses a cache for repeated calcuation.
+    '''
+    def __init__(self):
+        self.cache = {}
+
+    def n_choose_k(self, n, k):
+        '''
+        Computes nCk, i.e. n-choose-k.
+        '''
+        # sanity check
+        assert isinstance(n, int) and n >= 1
+        assert isinstance(k, int) and k >= 0
+        # cache lookup
+        if (n, k) in self.cache.keys():
+            return self.cache[(n, k)]
+        # base case: k = 0
+        if k == 0:
+            value = 1
+        # symmetric case: k > n // 2
+        elif k > n // 2:
+            value = self.n_choose_k(n, n-k)
+        # common case
+        else:    
+            value = self.n_choose_k(n, k-1) * (n - k + 1) / k
+        # store result to cache
+        self.cache[(n, k)] = int(value)
+        return int(value)
+    
