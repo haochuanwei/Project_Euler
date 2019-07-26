@@ -1750,4 +1750,14 @@ def Euler_Problem_51(common_num_digits=3, target_num_digits=7, target_prime_coun
             qualified_groups.append(tuple(group_of_primes))
     return qualified_groups
 
+def Euler_Problem_52():
+    '''
+    It can be seen that the number, 125874, and its double, 251748, contain exactly the same digits, but in a different order.
+    Find the smallest positive integer, x, such that 2x, 3x, 4x, 5x, and 6x, contain the same digits.
+    '''
+    # the first digit has to be 1, otherwise 5x and 6x will have more digits than x.
+    # likewise, the second digits has to be between 1 and 6.
+
+    # Actually... the first 6 significant digits of 1/7 will do.
+    return 142857
 
