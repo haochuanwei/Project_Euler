@@ -1781,4 +1781,42 @@ def Euler_Problem_53(n=100, threshold=10**6):
                 count += 1
     return count
 
+def Euler_Problem_60(max_digits=3):
+    '''
+    The primes 3, 7, 109, and 673, are quite remarkable. By taking any two primes and concatenating them in any order the result will always be prime. For example, taking 7 and 109, both 7109 and 1097 are prime. The sum of these four primes, 792, represents the lowest sum for a set of four primes with this property.
+    Find the lowest sum for a set of five primes for which any two primes concatenate to produce another prime.
+    '''
+    # One could reduce this to a graph problem: if two primes concatenate to another prime, then those two primes have an edge connecting them. We are to look for the 5-clique with the lowest sum then.
 
+    # There's another angle: any 5-clique contains a 4-clique. So the smallest 4-clique, which is already given, is a hugh clue.
+    # Let's try assuming that (3, 7, 109, 673, ?) is the 5-clique that we are looking for.
+    # Update: it turned out that this assumption was not true.
+    from subroutines import all_primes_under, is_prime_given_primes, CliqueFinder
+
+    def concat(a, b):
+        '''
+        Concatenate two integers.
+        '''
+        return int(str(a)+str(b))
+    
+    def get_adjacency_list():
+        '''
+        Determine all the pairs of primes that, when concatenated, remain a prime.
+        '''
+        adjacency_list = []
+        for i, _p in enumerate(primes_list):
+            connected = []
+            for j, _q in enumerate(primes_list):
+                if _p != _q and is_prime_given_primes(concat(_p, _q), extended_primes_list) and is_prime_given_primes(concat(_q, _p), extended_primes_list):
+                    connected.append(j)
+            adjacency_list.append(connected)
+        return adjacency_list
+    
+    primes_list = all_primes_under(10**max_digits)
+    extended_primes_list = all_primes_under(int(1.1*10**max_digits))
+
+    finder = CliqueFinder(get_adjacency_list())
+    indicies = finder.compute(5)
+    answer = [[primes_list[idx] for idx in t] for t in list(indicies)]
+    return answer 
+            

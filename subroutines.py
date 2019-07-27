@@ -170,6 +170,19 @@ def is_prime_given_factorization(factorization):
             return True
     return False
 
+def is_prime_given_primes(num, primes):
+    '''
+    Determine if a number is prime, given an ascending list of prime numbers below its square root.
+    '''
+    from math import floor, sqrt
+    assert primes[-1] >= floor(sqrt(num))
+    for _p in primes:
+        if _p > floor(sqrt(num)):
+            break
+        if num % _p == 0:
+            return False
+    return True
+
 def all_primes_under(n):
     '''
     Compute all the prime numbers below n.
@@ -177,12 +190,11 @@ def all_primes_under(n):
     def is_prime_with_cache(num, cache):
         '''
         This is a subroutine for dynamic programming.
-        Given a cache of primes below a number, determine if it is prime.
+        Given a cache of primes below the square root of a number, determine if it is prime.
         The cache must be of ascending order.
         '''
         from math import sqrt, ceil
         for _p in cache:
-            assert _p < num
             if _p > ceil(sqrt(num)):
                 break
             if num % _p == 0:
@@ -333,4 +345,50 @@ class Combination(object):
         # store result to cache
         self.cache[(n, k)] = int(value)
         return int(value)
-    
+   
+class CliqueFinder(object):
+    '''
+    Given a graph, find the cliques in it.
+    '''
+    def __init__(self, adjacency_list):
+        self.A = adjacency_list[:]
+        self.n = len(self.A)
+        self.cliques = {}
+        self.compute(2)
+
+    def compute(self, k):
+        '''
+        Compute k-cliques in the graph.
+        '''
+        from collections import defaultdict
+        assert isinstance(k, int) and k >= 2
+        # look-up case
+        if k in self.cliques.keys():
+            return self.cliques[k]
+
+        k_cliques = set()
+        # base case: k = 2
+        if k == 2:
+            for i in range(0, self.n):
+                for j in self.A[i]:
+                    if i < j:
+                        k_cliques.add((i, j))
+        # common case: recursion
+        else:
+            # find all the k-1 cliques
+            lower_cliques = self.compute(k-1)
+            for _clique in lower_cliques:
+                _clique_set = set(_clique)
+                # use a dict to find vertices that are connected to everyone in the clique
+                degree = defaultdict(int)
+                for i in _clique:
+                    for j in self.A[i]:
+                        if not j in _clique_set:
+                            degree[j] += 1
+                for _key in degree.keys():
+                    if degree[_key] == len(_clique):
+                        new_clique = tuple(sorted(list(_clique) + [_key]))
+                        k_cliques.add(new_clique)
+        self.cliques[k] = k_cliques
+        return k_cliques
+
