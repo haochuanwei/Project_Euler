@@ -345,7 +345,164 @@ class Combination(object):
         # store result to cache
         self.cache[(n, k)] = int(value)
         return int(value)
-   
+
+class TexasHoldem(object):
+    def __init__(self):
+        self.value_mapping = {
+        '2':   2, '3':  3, '4':  4, '5':  5,
+        '6':   6, '7':  7, '8':  8, '9':  9,
+        'T':  10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14,
+        }
+
+    def values_and_suites(self, cards):
+        '''
+        Determine the values and suites of a 5-card hand.
+        Example card: ('A', 'C') for A Clubs, ('T', 'H') for 10 Hearts.
+        '''
+        from collections import defaultdict
+        assert len(cards) == 5
+        value_count = defaultdict(int)
+        suite_count = defaultdict(int)
+        for _value_raw, _suite in cards:
+            _value = self.value_mapping[_value_raw]
+            value_count[_value] += 1
+            suite_count[_suite] += 1
+        return value_count, suite_count
+
+    def is_royal_flush(self, value_count, suite_count):
+        '''
+        Check if a hand is a royal flush.
+        '''
+        straight_flush = self.is_straight_flush(value_count, suite_count)
+        if straight_flush:
+            if straight_flush[1] == 14:
+                return tuple([9] + list(straight_flush)[1:])
+        return False
+
+    def is_straight_flush(self, value_count, suite_count):
+        '''
+        Check if a hand is a straight flush.
+        '''
+        straight = self.is_straight(value_count, suite_count)
+        flush = self.is_flush(value_count, suite_count)
+        if straight and flush:
+            return tuple([8] + list(straight)[1:])
+        return False
+
+    def is_four_of_a_kind(self, value_count, suite_count):
+        '''
+        Check if a hand is a four of a kind.
+        '''
+        if len(value_count.values()) == 2:
+            if max(list(value_count.values())) == 4:
+                for _key, _value in value_count.items():
+                    if _value == 4:
+                        quartuple = _key
+                    else:
+                        single = _key
+                return (7, quartuple, single)
+        return False
+
+    def is_full_house(self, value_count, suite_count):
+        '''
+        Check if a hand is a full house.
+        '''
+        if len(value_count.values()) == 2:
+            if max(list(value_count.values())) == 3:
+                for _key, _value in value_count.items():
+                    if _value == 3:
+                        triple = _key
+                    else:
+                        double = _key
+                return (6, triple, double)
+        return False
+
+    def is_flush(self, value_count, suite_count):
+        '''
+        Check if a hand is a flush.
+        '''
+        if len(suite_count.values()) == 1:
+            if list(suite_count.values())[0] == 5:
+                high_card = max(value_count.keys())
+                return (5, high_card)
+        return False
+
+    def is_straight(self, value_count, suite_count):
+        '''
+        Check if a hand is a straight.
+        '''
+        if max(value_count.values()) == 1 and min(value_count.keys()) + 4 == max(value_count.keys()):
+            high_end = max(value_count.keys())
+            return (4, high_end)
+        return False
+
+    def is_three_of_a_kind(self, value_count, suite_count):
+        '''
+        Check if a hand is a three of a kind.
+        '''
+        if len(value_count.values()) == 3:
+            if max(list(value_count.values())) == 3:
+                high_cards = []
+                for _key, _value in value_count.items():
+                    if _value == 3:
+                        triple = _key
+                    else:
+                        high_cards.append(_key)
+                high_cards = sorted(high_cards, reverse=True)
+                return tuple([3, triple] + high_cards)
+        return False
+
+    def is_two_pairs(self, value_count, suite_count):
+        '''
+        Check if a hand is a two pairs.
+        '''
+        if len(value_count.values()) == 3:
+            if max(list(value_count.values())) == 2:
+                doubles = []
+                for _key, _value in value_count.items():
+                    if _value == 2:
+                        doubles.append(_key)
+                    else:
+                        high_card = _key
+                doubles = sorted(doubles, reverse=True)
+                return tuple([2] + doubles + [high_card])
+        return False
+
+    def is_one_pair(self, value_count, suite_count):
+        '''
+        Check if a hand is a one pair.
+        '''
+        if len(value_count.values()) == 4:
+            high_cards = []
+            for _key, _value in value_count.items():
+                if _value == 2:
+                    double = _key
+                else:
+                    high_cards.append(_key)
+            high_cards = sorted(high_cards, reverse=True)
+            return tuple([1] + [double] + high_cards)
+        return False
+
+    def is_high_card(self, value_count, suite_count):
+        '''
+        Check if a hand is a high card.
+        '''
+        if len(value_count.values()) == 5:
+            high_cards = sorted(list(value_count.keys()), reverse=True)
+            return tuple([0] + high_cards)
+        return False
+
+    def evaluate_hand(self, cards):
+        '''
+        Determine the type and power of a hand.
+        Example card: ('A', 'C') for A Clubs, ('10', 'H') for 10 Hearts.
+        '''
+        value_count, suite_count = self.values_and_suites(cards)
+        for _possibility in [self.is_royal_flush, self.is_straight_flush, self.is_four_of_a_kind, self.is_full_house, self.is_flush, self.is_straight, self.is_three_of_a_kind, self.is_two_pairs, self.is_one_pair, self.is_high_card]:
+            matched = _possibility(value_count, suite_count)
+            if matched:
+                return matched
+
 class CliqueFinder(object):
     '''
     Given a graph, find the cliques in it.
