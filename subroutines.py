@@ -549,3 +549,8 @@ class CliqueFinder(object):
         self.cliques[k] = k_cliques
         return k_cliques
 
+def reverse_number(num):
+    '''
+    Reverse a number.
+    '''
+    return int(str(num)[::-1])
