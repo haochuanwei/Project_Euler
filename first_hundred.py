@@ -1944,8 +1944,45 @@ def Euler_Problem_56(a_bound=10**2, b_bound=10**2):
                 max_digital_sum = candidate
     return max_digital_sum
         
+def Euler_Problem_57(num_expansions=1000):
+    '''
+    It is possible to show that the square root of two can be expressed as an infinite continued fraction.
+    √ 2 = 1 + 1/(2 + 1/(2 + 1/(2 + ... ))) = 1.414213...
+    By expanding this for the first four iterations, we get:
+    1 + 1/2 = 3/2 = 1.5
+    1 + 1/(2 + 1/2) = 7/5 = 1.4
+    1 + 1/(2 + 1/(2 + 1/2)) = 17/12 = 1.41666...
+    1 + 1/(2 + 1/(2 + 1/(2 + 1/2))) = 41/29 = 1.41379...
+    The next three expansions are 99/70, 239/169, and 577/408, but the eighth expansion, 1393/985, is the first example where the number of digits in the numerator exceeds the number of digits in the denominator.
+    In the first one-thousand expansions, how many fractions contain a numerator with more digits than denominator?
+    '''
+    def next_pair(numer, denom):
+        '''
+        Compute the next pair of numerator and denominator, given the current pair.
+        If you work this recurrence relation on scratch paper, it turns out to be:
+        new_numer = numer + 2 * denom
+        new_denom = numer + denom
+        '''
+        # Here's why given numer and denom are coprime, the new pair will also be coprime:
+        # Suppose the new pair has a common factor c. Then c divides the difference of the pair, which means c divides denom.
+        # Then c divides the difference between (numer + denom) and denom, which means c divides numer.
+        # Then numer and denom are not coprime, which is a contradiction.
+        return numer + 2 * denom, numer + denom
+
+    # initialize the count of qualified fractions to be returned
+    count = 0
+    # initialzie the zero-th expansion
+    current_numer = 1
+    current_denom = 1
+    # iterate and count qualified fractions
+    for k in range(1, num_expansions+1):
+        current_numer, current_denom = next_pair(current_numer, current_denom)
+        if len(str(current_numer)) > len(str(current_denom)):
+            count += 1
+    return count
+
 @timeit
-def Euler_Problem_60(max_digits=3):
+def Euler_Problem_60(max_digits=4):
     '''
     The primes 3, 7, 109, and 673, are quite remarkable. By taking any two primes and concatenating them in any order the result will always be prime. For example, taking 7 and 109, both 7109 and 1097 are prime. The sum of these four primes, 792, represents the lowest sum for a set of four primes with this property.
     Find the lowest sum for a set of five primes for which any two primes concatenate to produce another prime.
