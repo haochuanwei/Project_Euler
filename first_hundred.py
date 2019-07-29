@@ -1982,6 +1982,81 @@ def Euler_Problem_57(num_expansions=1000):
     return count
 
 @timeit
+def Euler_Problem_58(threshold=0.1, trial_bound=10**8):
+    '''
+    Starting with 1 and spiralling anticlockwise in the following way, a square spiral with side length 7 is formed.
+    37 36 35 34 33 32 31
+    38 17 16 15 14 13 30
+    39 18  5  4  3 12 29
+    40 19  6  1  2 11 28
+    41 20  7  8  9 10 27
+    42 21 22 23 24 25 26
+    43 44 45 46 47 48 49
+    It is interesting to note that the odd squares lie along the bottom right diagonal, but what is more interesting is that 8 out of the 13 numbers lying along both diagonals are prime; that is, a ratio of 8/13 ≈ 62%.
+    If one complete new layer is wrapped around the spiral above, a square spiral with side length 9 will be formed. If this process is continued, what is the side length of the square spiral for which the ratio of primes along both diagonals first falls below 10%?
+    '''
+    # Suppose the diagonal terms are put into an array A.
+    # The terms follow a pattern: A[i] = A[i-1] + 2 * ceil(i/4).
+    from subroutines import all_primes_under, is_prime_given_primes
+    from math import ceil, sqrt
+
+    A = [1]
+    def another_term():
+        '''
+        Extend A[i].
+        '''
+        A.append(A[-1] + 2 * ceil(len(A) / 4))
+        return A[-1]
+
+    divisor_bound = ceil(sqrt(trial_bound))
+    # precompute all primes in an assumed range
+    primes_list = all_primes_under(divisor_bound)
+    # initialize a count of terms and primes, with the first term 1 already counted
+    prime_count = 0
+    # compute terms on the diagonal one by one, until primes are too sparse
+    # keep computing till at least 15 terms
+    while prime_count / len(A) >= threshold or len(A) < 15:
+        _term = another_term()
+        # if the term is out of assumed range, extend that range
+        if _term > primes_list[-1]**2:
+            divisor_bound *= 10
+            primes_list    = all_primes_under(divisor_bound)
+        # if the term is prime, bump prime count      
+        if is_prime_given_primes(_term, primes_list):
+            prime_count += 1
+    # the side length is equal to the number of layers * 2 + 1
+    return ceil((len(A) - 1) / 4) * 2 + 1
+
+@timeit
+def Euler_Problem_59(valid_threshold=0.26):
+    '''
+    Each character on a computer is assigned a unique code and the preferred standard is ASCII (American Standard Code for Information Interchange). For example, uppercase A = 65, asterisk (*) = 42, and lowercase k = 107.
+    A modern encryption method is to take a text file, convert the bytes to ASCII, then XOR each byte with a given value, taken from a secret key. The advantage with the XOR function is that using the same encryption key on the cipher text, restores the plain text; for example, 65 XOR 42 = 107, then 107 XOR 42 = 65.
+    For unbreakable encryption, the key is the same length as the plain text message, and the key is made up of random bytes. The user would keep the encrypted message and the encryption key in different locations, and without both "halves", it is impossible to decrypt the message.
+    Unfortunately, this method is impractical for most users, so the modified method is to use a password as a key. If the password is shorter than the message, which is likely, the key is repeated cyclically throughout the message. The balance for this method is using a sufficiently long password key for security, but short enough to be memorable.
+    Your task has been made easy, as the encryption key consists of three lower case characters. Using p059_cipher.txt (right click and 'Save Link/Target As...'), a file containing the encrypted ASCII codes, and the knowledge that the plain text must contain common English words, decrypt the message and find the sum of the ASCII values in the original text.
+    '''
+    from subroutines import XOR_decipher
+    from custom_config import get_attachment_path
+    import re
+
+    with open(get_attachment_path(59), 'r') as f:
+        ciphered = list(map(int, f.read().replace('\n', '').split(',')))
+
+    # brute-force all combinations of possibly keys
+    possible_keys = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+    'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+    for _i in possible_keys:
+        for _j in possible_keys:
+            for _k in possible_keys:
+                # take advantage of the frequency of a, e, i, o, and u
+                candidate = XOR_decipher(ciphered, [_i, _j, _k])
+                valid_len = len(re.sub(r'[^aeiou]', '', candidate))
+                if valid_len / len(candidate) > valid_threshold:
+                    print(_i, _j, _k, candidate)
+    # no value is returned; inspect printed results to find the answer.
+
+@timeit
 def Euler_Problem_60(max_digits=4):
     '''
     The primes 3, 7, 109, and 673, are quite remarkable. By taking any two primes and concatenating them in any order the result will always be prime. For example, taking 7 and 109, both 7109 and 1097 are prime. The sum of these four primes, 792, represents the lowest sum for a set of four primes with this property.

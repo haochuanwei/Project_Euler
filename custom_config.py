@@ -9,6 +9,7 @@ def get_attachment_path(problem_number):
                             22: 'p022_names.txt',
                             42: 'p042_words.txt',
                             54: 'p054_poker.txt',
+                            59: 'p059_cipher.txt',
                             }
     attachment_path = os.path.join(attachment_dir, attachment_filenames[problem_number])
     return attachment_path

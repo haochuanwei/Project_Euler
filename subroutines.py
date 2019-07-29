@@ -600,3 +600,17 @@ def reverse_number(num):
     Reverse a number.
     '''
     return int(str(num)[::-1])
+
+def XOR_decipher(text, key):
+    '''
+    Decipher a message using XOR.
+    text -- a list of integers corresponding to the ASCII value of characters.
+    key -- a list of characters used as keys.
+    '''
+    deciphered = []
+    key_length = len(key)
+    key_ascii  = [ord(_k) for _k in key]
+    for i, _ascii in enumerate(text):
+        deciphered.append(chr(_ascii ^ key_ascii[i % key_length]))
+    return ''.join(deciphered)
+
