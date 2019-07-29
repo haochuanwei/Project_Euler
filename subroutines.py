@@ -123,33 +123,79 @@ def get_sum_proper_divisors(factorization):
         original_number *= (_base ** _power)
     return sum_divisors - original_number
 
-def multiply_by_constant(orderDict, c):
+class DigitwiseInteger(object):
     '''
-    Subroutine to multiply a number by c.
-    orderDict -- defaultdict of magnitude -> value mapping.
-    Eg. {0: 1, 1: 3, 2: 6} stands for 1*10^1 + 3*10^1 + 6*10^2 = 631.
+    Integer that is represented by the value on each digit.
     '''
-    from collections import defaultdict
-    def correct_digits(orderDict):
+    def __init__(self, num):
+        '''
+        Initialize from a usual integer.
+        '''
+        from collections import defaultdict
+        self.orderDict = defaultdict(int)
+        _digit = 0
+        _value = num
+        if _value == 0:
+            return {0: 0}
+        while _value != 0:
+            self.orderDict[_digit] = _value % 10
+            _digit += 1
+            _value = _value // 10
+
+    def reconstruct(self):
+        '''
+        Reconstruct the original number.
+        '''
+        retval = 0
+        for _digit, _value in self.orderDict.items():
+            retval += _value * (10 ** _digit)
+        return retval
+
+    def __consistency_check(self):
+        assert DigitwiseInteger(self.reconstruct()).reconstruct() == self.reconstruct()
+
+    def correct_digits(self, orderDict):
         '''
         Promote digits with value greater than or equal to 10.
         '''
+        from collections import defaultdict
         retDict = defaultdict(int)
-        for _key, _value in orderDict.items():
-            retDict[_key] += _value % 10
-            if _value >= 10:
-                retDict[_key+1] += _value // 10
+        digits = sorted(orderDict.keys())
+        # check digits from low to high
+        for _digit in digits:
+            _value = orderDict[_digit]
+            # pickup value
+            retDict[_digit] += _value
+            # promote if appropriate
+            if retDict[_digit] >= 10:
+                retDict[_digit+1] += retDict[_digit] // 10
+                retDict[_digit]    = retDict[_digit] % 10
         return retDict
 
-    retDict = defaultdict(int)
-    for _key, _value in orderDict.items():
-        multiplied = _value * c
-        shift = 0
-        while multiplied > 0 or shift == 0:
-            retDict[_key+shift] += (multiplied % 10)
-            multiplied = multiplied // 10
-            shift += 1
-    return correct_digits(retDict)
+    def multiply_by_constant(self, c, in_place=False, check_result=False):
+        '''
+        Subroutine to multiply a number by c.
+        orderDict -- defaultdict of magnitude -> value mapping.
+        Eg. {0: 1, 1: 3, 2: 6} stands for 1*10^1 + 3*10^1 + 6*10^2 = 631.
+        '''
+        from collections import defaultdict
+        # perform calculation digit-wise
+        retDict = defaultdict(int)
+        for _key, _value in self.orderDict.items():
+            multiplied = _value * c
+            shift = 0
+            while multiplied > 0 or shift == 0:
+                retDict[_key+shift] += (multiplied % 10)
+                multiplied = multiplied // 10
+                shift += 1
+        # promote digits that have value greater than 10
+        retDict = self.correct_digits(retDict)
+        if in_place:
+            self.orderDict = defaultdict(int)
+            self.orderDict.update(retDict)
+            if check_result:
+                self.__consistency_check()
+        return retDict
 
 def factorial(n):
     '''

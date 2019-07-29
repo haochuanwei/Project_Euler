@@ -600,13 +600,13 @@ def Euler_Problem_16(n=1000):
     '''
     # 2 ^ 1000 is between 10^250 and 10^333, which is too large for typical data types.
     # However, one can easily store by digit.
-    from subroutines import multiply_by_constant
+    from subroutines import DigitwiseInteger
 
     # run subroutine n times
-    num = {0: 1}
+    num = DigitwiseInteger(1)
     for k in range(0, n):
-        num = multiply_by_constant(num, 2)
-    return sum(num.values())  
+        num.multiply_by_constant(2, in_place=True)
+    return sum(num.orderDict.values())  
 
 @timeit
 def Euler_Problem_17(n=1000):
@@ -826,13 +826,13 @@ def Euler_Problem_20(n=100):
     '''
     # 100! is between 10^100 and 10^200, which is too large for typical data types.
     # However, one can easily store by digit.
-    from subroutines import multiply_by_constant
+    from subroutines import DigitwiseInteger
 
     # run subroutine n times
-    num = {0: 1}
+    num = DigitwiseInteger(1)
     for k in range(1, n+1):
-        num = multiply_by_constant(num, k)
-    return sum(num.values())  
+        num.multiply_by_constant(k, in_place=True)
+    return sum(num.orderDict.values())  
 
 @timeit
 def Euler_Problem_21(n=10000):
@@ -1919,8 +1919,31 @@ def Euler_Problem_55(bound=10**4, num_attempts=50):
             lychrel_numbers.append(num)
     return lychrel_numbers    
 
+@timeit
+def Euler_Problem_56(a_bound=10**2, b_bound=10**2):
+    '''
+    A googol (10^100) is a massive number: one followed by one-hundred zeros; 100^100 is almost unimaginably large: one followed by two-hundred zeros. Despite their size, the sum of the digits in each number is only 1.
+    Considering natural numbers of the form, ab, where a, b < 100, what is the maximum digital sum?
+    '''
+    from subroutines import DigitwiseInteger
+    def digit_sum(a, b):
+        '''
+        Calculate the sum of digits of a^b.
+        '''
+        num = DigitwiseInteger(1)
+        for k in range(0, b):
+            num.multiply_by_constant(a, in_place=True)
+        return sum(num.orderDict.values())
 
-
+    # brute-force all combinations of a and b
+    max_digital_sum = 0
+    for a in range(1, a_bound+1):
+        for b in range(1, b_bound+1):
+            candidate = digit_sum(a, b)
+            if candidate > max_digital_sum:
+                max_digital_sum = candidate
+    return max_digital_sum
+        
 @timeit
 def Euler_Problem_60(max_digits=3):
     '''
