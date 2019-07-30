@@ -2095,4 +2095,25 @@ def Euler_Problem_60(max_digits=4):
     indicies = finder.compute(5)
     answer = [tuple([primes_list[idx] for idx in t]) for t in list(indicies)]
     return answer 
-            
+           
+@timeit
+def Euler_Problem_63():
+    '''
+    The 5-digit number, 16807=7^5, is also a fifth power. Similarly, the 9-digit number, 134217728=8^9, is a ninth power.
+    How many n-digit positive integers exist which are also an nth power?
+    '''
+    # Note that if the base is greater than or equal to 10, then the number of powers will never catch up with the number of digits.
+    # On the other side, if the base of less than 10, then the number of powers catches up with the number of digits exactly once, although it could be on multiple consecutive powers.
+    count = 0
+    # brute force all powers of 1 to 9, terminating when the number of digits falls behind
+    for _base in range(1, 10):
+        _power = 1
+        while _power <= len(str(int(_base ** _power))):
+            if _power == len(str(int(_base ** _power))):
+                count += 1
+            _power += 1
+    return count
+
+
+
+
