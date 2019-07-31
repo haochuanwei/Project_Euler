@@ -696,7 +696,6 @@ def Euler_Problem_17(n=1000):
 def Euler_Problem_18(row_idx=-1):
     '''
     By starting at the top of the triangle below and moving to adjacent numbers on the row below, the maximum total from top to bottom is 23.
-    
        3
       7 4
      2 4 6
@@ -737,31 +736,11 @@ def Euler_Problem_18(row_idx=-1):
     63 66 04 68 89 53 67 30 73 16 69 87 40 31
     04 62 98 27 23 09 70 98 73 93 38 53 60 04 23
     '''
+    from subroutines import max_sum_path_in_triangle
+    # turn raw input into a triangular array
     arr = [[int(_z) for _z in _y.split(' ') if len(_z) > 0] for _y in inp_arr.split('\n')]
     arr = [_l for _l in arr if len(_l) > 0]
-
-    # dynamic programming: tile it up by cumulative scores, row by row
-    points = []
-    for i, _row in enumerate(arr):
-        # base case: the first row
-        if i == 0:
-            points.append(_row[:])
-        else:
-            tmp_row = []
-            last_idx = len(_row) - 1
-            for j, _num in enumerate(_row):
-                # special case: the left-most element of a row
-                if j == 0:
-                    parent_value = points[i-1][0]
-                # special case: the right-most element of a row
-                elif j == last_idx:
-                    parent_value = points[i-1][j-1]
-                # common case: a middle element of a row
-                else:
-                    parent_value = max(points[i-1][j-1], points[i-1][j]) 
-                tmp_row.append(parent_value + _row[j])
-            points.append(tmp_row[:])
-    return max(points[row_idx])
+    return max_sum_path_in_triangle(arr)
 
 @timeit
 def Euler_Problem_19(n=2000):
@@ -2114,6 +2093,22 @@ def Euler_Problem_63():
             _power += 1
     return count
 
-
-
-
+@timeit
+def Euler_Problem_67():
+    '''
+    By starting at the top of the triangle below and moving to adjacent numbers on the row below, the maximum total from top to bottom is 23.
+    3
+    7 4
+    2 4 6
+    8 5 9 3
+    That is, 3 + 7 + 4 + 9 = 23.
+    Find the maximum total from top to bottom in triangle.txt (right click and 'Save Link/Target As...'), a 15K text file containing a triangle with one-hundred rows.
+    '''
+    from custom_config import get_attachment_path
+    from subroutines import max_sum_path_in_triangle
+    with open(get_attachment_path(67), 'r') as f:
+        inp_arr = f.read()
+    # turn raw input into a triangular array
+    arr = [[int(_z) for _z in _y.split(' ') if len(_z) > 0] for _y in inp_arr.split('\n')]
+    arr = [_l for _l in arr if len(_l) > 0]
+    return max_sum_path_in_triangle(arr)

@@ -614,3 +614,38 @@ def XOR_decipher(text, key):
         deciphered.append(chr(_ascii ^ key_ascii[i % key_length]))
     return ''.join(deciphered)
 
+def max_sum_path_in_triangle(arr, row_idx=-1):
+    '''
+    Given a triangle-shaped array, determine the max sum of elements along a downward path.
+    arr -- the input array.
+    row_idx -- the index of the row where the path terminates.
+    Example:
+       3
+      7 4
+     2 4 6
+    8 5 9 3
+    The max sum is 3 + 7 + 4 + 9 = 23.
+    '''
+    # dynamic programming: tile it up by cumulative scores, row by row
+    points = []
+    for i, _row in enumerate(arr):
+        # base case: the first row
+        if i == 0:
+            points.append(_row[:])
+        else:
+            tmp_row = []
+            last_idx = len(_row) - 1
+            for j, _num in enumerate(_row):
+                # special case: the left-most element of a row
+                if j == 0:
+                    parent_value = points[i-1][0]
+                # special case: the right-most element of a row
+                elif j == last_idx:
+                    parent_value = points[i-1][j-1]
+                # common case: a middle element of a row
+                else:
+                    parent_value = max(points[i-1][j-1], points[i-1][j]) 
+                tmp_row.append(parent_value + _row[j])
+            points.append(tmp_row[:])
+    return max(points[row_idx])
+
