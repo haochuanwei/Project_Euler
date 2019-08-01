@@ -2074,7 +2074,36 @@ def Euler_Problem_60(max_digits=4):
     indicies = finder.compute(5)
     answer = [tuple([primes_list[idx] for idx in t]) for t in list(indicies)]
     return answer 
-           
+    
+@timeit
+def Euler_Problem_62(k=5, power=3, max_base_digits=4):
+    '''
+    The cube, 41063625 (345^3), can be permuted to produce two other cubes: 56623104 (384^3) and 66430125 (405^3). In fact, 41063625 is the smallest cube which has exactly three permutations of its digits which are also cube.
+    Find the smallest cube for which exactly five permutations of its digits are cube.
+    '''
+    # idea: to determine the number of permutations, we can sort the digits of each number and use that as a hash key.
+    from collections import defaultdict
+
+    def permute_to_ascending(num):
+        '''
+        Example:
+        312 -> '123'
+        '''
+        return ''.join(sorted(list(str(num))))
+
+    # note that any group of qualified numbers must have the same number of digits, which means they must also have the same number of digits in their base for any positive integer power
+    for num_digits in range(1, max_base_digits):
+        perm_frequency = defaultdict(list)
+        # iterate through all the numbers with the same number of digits in their base
+        for _base in range(10**(num_digits-1), 10**num_digits-1):
+            value = int(_base ** power)
+            perm_frequency[permute_to_ascending(value)].append(value)
+        # examine if any permutation showed up exactly the required number of times
+        for _perm, _terms in perm_frequency.items():
+            if len(_terms) == k:
+                return _terms
+    return -1
+
 @timeit
 def Euler_Problem_63():
     '''
