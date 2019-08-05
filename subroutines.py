@@ -332,6 +332,12 @@ def get_triangulars(n):
     '''
     return [int(i * (i + 1) / 2) for i in range(1, n+1)]
 
+def get_squares(n):
+    '''
+    Get the first n triangular numbers.
+    '''
+    return [int(i ** 2) for i in range(1, n+1)]
+
 def get_pentagonals(n):
     '''
     Get the first n pentagonal numbers.
@@ -343,6 +349,18 @@ def get_hexagonals(n):
     Get the first n hexagonal numbers.
     '''
     return [int(i * (2 * i - 1)) for i in range(1, n+1)]
+
+def get_heptagonals(n):
+    '''
+    Get the first n heptagonal numbers.
+    '''
+    return [int(i * (5 * i - 3) / 2) for i in range(1, n+1)]
+
+def get_octagonals(n):
+    '''
+    Get the first n octagonal numbers.
+    '''
+    return [int(i * (3 * i - 2)) for i in range(1, n+1)]
 
 class Modulos(object):
     '''
