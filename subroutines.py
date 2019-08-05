@@ -667,3 +667,32 @@ def max_sum_path_in_triangle(arr, row_idx=-1):
             points.append(tmp_row[:])
     return max(points[row_idx])
 
+def continued_fraction_representation(num, max_terms=10**5, check_loop_length=30):
+    '''
+    Given a positive Decimal b > 1, represent its square root as a sequence of integers {a_n}, such that 
+    b -> floor(b), a_1, a_2, ...
+    1 / (b - floor(b)) -> a_1, a_2, a_3, ... 
+    Also detects if such a sequence has a loop.
+    '''
+    from math import floor
+    from decimal import Decimal
+    assert isinstance(num, Decimal)
+    int_part = floor(num)
+    sequence = [int_part]
+    residue  = num - Decimal(int_part)
+    reciprocal_monitor = dict()
+    loop_start, loop_end = None, None
+    while len(sequence) < max_terms and residue != 0.0:
+        reciprocal = Decimal(1.0) / residue
+        int_part = floor(reciprocal)
+        sequence.append(int_part)
+        residue = reciprocal - Decimal(int_part)
+        # if the reciprocal has shown up before, we've found a loop in the sequence 
+        identifier = str(reciprocal)
+        identifier = identifier[:min(check_loop_length, len(identifier))]
+        if identifier in reciprocal_monitor:
+            loop_start, loop_end = reciprocal_monitor[identifier], len(sequence) - 1
+            break
+        else:
+            reciprocal_monitor[identifier] = len(sequence) - 1
+    return sequence, loop_start, loop_end

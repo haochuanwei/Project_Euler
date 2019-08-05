@@ -2216,6 +2216,42 @@ def Euler_Problem_63():
     return count
 
 @timeit
+def Euler_Problem_64(bound=10**4):
+    '''
+    All square roots are periodic when written as continued fractions and can be written in the form:
+    √N = a0 + 1 / (a1 + 1 / (a2 + (1 / (a3 + …
+
+    ...
+
+    Exactly four continued fractions, for N≤13, have an odd period.
+    How many continued fractions for N≤10000 have an odd period?
+
+    The equations don't show very well in text editors. Go to: 
+    https://projecteuler.net/problem=64
+    for the original problem description.
+    '''
+    from subroutines import continued_fraction_representation
+    from decimal import Decimal, getcontext
+    from math import sqrt
+
+    # initialize the number of numbers that have odd periods
+    count = 0
+    # extend precision
+    getcontext().prec = 10 * int(sqrt(bound))
+    # call subroutine to get a sequence representation with loop detection
+    for num in range(1, bound+1):
+        sequence, loop_start, loop_end = continued_fraction_representation(Decimal(num).sqrt())
+        if loop_start is not None:
+            assert loop_end is not None
+            period = loop_end - loop_start
+            if period % 2 == 1:
+                count += 1
+        else:
+            if len(sequence) > 10:
+                raise ValueError
+    return count
+
+@timeit
 def Euler_Problem_67():
     '''
     By starting at the top of the triangle below and moving to adjacent numbers on the row below, the maximum total from top to bottom is 23.
