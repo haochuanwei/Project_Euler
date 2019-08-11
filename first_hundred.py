@@ -2252,6 +2252,57 @@ def Euler_Problem_64(bound=10**4):
     return count
 
 @timeit
+def Euler_Problem_65(n_th_convergent=100):
+    '''
+    The square root of 2 can be written as an infinite continued fraction.
+
+    √2 = 1 + 1 / (2 + 1 / (2 + 1 / (2 + 1 / (2+...
+    The infinite continued fraction can be written, √2 = [1;(2)], (2) indicates that 2 repeats ad infinitum. In a similar way, √23 = [4;(1,3,1,8)].
+    It turns out that the sequence of partial values of continued fractions for square roots provide the best rational approximations.
+    What is most surprising is that the important mathematical constant,
+    e = [2;1,2,1,1,4,1,1,6,1,...,1,2k,1,...].
+    Find the sum of digits in the numerator of the 100th convergent of the continued fraction for e.
+
+    The equations don't show very well in text editors. Go to: 
+    https://projecteuler.net/problem=65
+    for the original problem description.
+    '''
+    # Consider the first few terms:
+    # a0 = 2 + [] = 2
+    # a1 = 2 + 1 / (1 + []) = 3
+    # a2 = 2 + 1 / (1 + 1 / (2 + [])) = 2 + 1 / (1 + 1/2) = 8 / 3
+    def compile_sequence_to_fraction(seq):
+        '''
+        Compile an integer sequence into its corresponding fraction.
+        '''
+        from fractions import Fraction
+        # sanity check
+        assert len(seq) > 0
+        # initialize the value to be returned by working backwards from the last number
+        retval = Fraction(1, seq.pop())
+        # keep going backwords till the start of the sequence
+        while len(seq) > 0:
+            retval = 1 / (seq.pop() + retval)
+        return retval
+    
+    def build_sequence_for_e(num_terms=100):
+        '''
+        Build the integer sequence for e.
+        '''
+        # initialize the sequence to be returned
+        sequence = []
+        # build terms in the following manner: 1, 2, 1,   1, 4, 1,   1, 6, 1, ...
+        current_middle_in_triple = 2
+        while len(sequence) < num_terms:
+            sequence.append(1)
+            sequence.append(current_middle_in_triple)
+            sequence.append(1)
+            current_middle_in_triple += 2
+        return sequence[:num_terms]
+   
+    return 2 + compile_sequence_to_fraction(build_sequence_for_e(num_terms=n_th_convergent-1))
+
+@timeit
 def Euler_Problem_67():
     '''
     By starting at the top of the triangle below and moving to adjacent numbers on the row below, the maximum total from top to bottom is 23.
