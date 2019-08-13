@@ -669,7 +669,8 @@ def max_sum_path_in_triangle(arr, row_idx=-1):
 
 def continued_fraction_representation(num, max_terms=10**5, check_loop_length=30):
     '''
-    Given a positive Decimal b > 1, represent its square root as a sequence of integers {a_n}, such that 
+    Warning: this implementation gets numerically unstable for long sequences.
+    Given a positive Decimal b > 1, represent it as a sequence of integers {a_n}, such that 
     b -> floor(b), a_1, a_2, ...
     1 / (b - floor(b)) -> a_1, a_2, a_3, ... 
     Also detects if such a sequence has a loop.
@@ -696,3 +697,59 @@ def continued_fraction_representation(num, max_terms=10**5, check_loop_length=30
         else:
             reciprocal_monitor[identifier] = len(sequence) - 1
     return sequence, loop_start, loop_end
+
+def sqrt_continued_fraction_generator(num):
+    '''
+    Takes the square root of a number, build a continued fraction sequence and put that into a generator.
+    '''
+    import sympy
+    return sympy.ntheory.continued_fraction_iterator(sympy.sqrt(num))
+
+def compile_continued_fraction_representation(seq):
+    '''
+    Compile an integer sequence (continued fraction representation) into its corresponding fraction.
+    '''
+    from fractions import Fraction
+    # sanity check
+    assert len(seq) > 0
+    # initialize the value to be returned by working backwards from the last number
+    retval = Fraction(1, seq.pop())
+    # keep going backwords till the start of the sequence
+    while len(seq) > 0:
+        retval = 1 / (seq.pop() + retval)
+    return retval
+
+def solve_pells_equation(n):
+    '''
+    Solver of Pell's equation, i.e. x^2 - n * y^2 = 1.
+    Makes use of continued fraction representation of sqrt(n).
+    Reference: 
+    https://en.wikipedia.org/wiki/Continued_fraction#Infinite_continued_fractions_and_convergents
+    '''
+    assert isinstance(n, int) and n > 1
+    from fractions import Fraction
+    # get the continued fraction sequence
+    sequence = sqrt_continued_fraction_generator(n)
+    # keep a cache of the previous two terms
+    cache = []
+    # take advantage of that enumerate() and generators are both lazy
+    for i, term in enumerate(sequence):
+        _term = int(term)
+        # base case: the first term
+        if i == 0:
+            _frac = Fraction(_term, 1)
+        # base case: the second term
+        elif i == 1:
+            _frac = cache[-1] + Fraction(1, _term)
+        # common case: recursion
+        else:
+            _numer = _term * cache[-1].numerator + cache[-2].numerator 
+            _denom = _term * cache[-1].denominator + cache[-2].denominator 
+            _frac  = Fraction(_numer, _denom)
+            cache.pop(0)
+        cache.append(_frac)
+        # check the fraction
+        target = _frac.numerator ** 2 - n * _frac.denominator ** 2 
+        if target == 1:
+            return (_frac.numerator, _frac.denominator)
+    return (-1, -1)

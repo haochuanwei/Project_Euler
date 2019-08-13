@@ -2271,20 +2271,7 @@ def Euler_Problem_65(n_th_convergent=100):
     # a0 = 2 + [] = 2
     # a1 = 2 + 1 / (1 + []) = 3
     # a2 = 2 + 1 / (1 + 1 / (2 + [])) = 2 + 1 / (1 + 1/2) = 8 / 3
-    def compile_sequence_to_fraction(seq):
-        '''
-        Compile an integer sequence into its corresponding fraction.
-        '''
-        from fractions import Fraction
-        # sanity check
-        assert len(seq) > 0
-        # initialize the value to be returned by working backwards from the last number
-        retval = Fraction(1, seq.pop())
-        # keep going backwords till the start of the sequence
-        while len(seq) > 0:
-            retval = 1 / (seq.pop() + retval)
-        return retval
-    
+    from subroutines import compile_continued_fraction_representation
     def build_sequence_for_e(num_terms=100):
         '''
         Build the integer sequence for e.
@@ -2300,8 +2287,33 @@ def Euler_Problem_65(n_th_convergent=100):
             current_middle_in_triple += 2
         return sequence[:num_terms]
    
-    return 2 + compile_sequence_to_fraction(build_sequence_for_e(num_terms=n_th_convergent-1))
+    return 2 + compile_continued_fraction_representation(build_sequence_for_e(num_terms=n_th_convergent-1))
 
+@timeit
+def Euler_Problem_66(bound=1000):
+    '''
+    Consider quadratic Diophantine equations of the form:
+    x^2 – D×y^2 = 1
+    For example, when D=13, the minimal solution in x is 649^2 – 13×180^2 = 1.
+    It can be assumed that there are no solutions in positive integers when D is square.
+    By finding minimal solutions in x for D = {2, 3, 5, 6, 7}, we obtain the following:
+    3^2 – 2×2^2 = 1
+    2^2 – 3×1^2 = 1
+    9^2 – 5×4^2 = 1
+    5^2 – 6×2^2 = 1
+    8^2 – 7×3^2 = 1
+    Hence, by considering minimal solutions in x for D ≤ 7, the largest x is obtained when D=5.
+    Find the value of D ≤ 1000 in minimal solutions of x for which the largest value of x is obtained.
+    '''
+    from subroutines import solve_pells_equation
+    best_d, best_x, best_y = 0, 0, 0
+    for _d in range(2, bound+1):
+        _x, _y = solve_pells_equation(_d)
+        if _x > best_x:
+            best_d, best_x, best_y = _d, _x, _y
+        print(_d, _x, _y)
+    return {'D': best_d, 'x': best_x, 'y': best_y}
+    
 @timeit
 def Euler_Problem_67():
     '''
