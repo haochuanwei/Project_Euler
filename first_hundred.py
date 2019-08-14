@@ -1683,8 +1683,7 @@ def Euler_Problem_49():
     '''
     # idea: the 3-term arithmetic sequence problem can be reduced to the two-sum problem.
     # idea: the permutation check can be reduced to counter dict comparison.
-    from subroutines import all_primes_under, two_sum
-    from collections import Counter
+    from subroutines import all_primes_under, two_sum, related_by_digit_permutation
 
     # compute all primes in range
     primes_list = all_primes_under(10000)
@@ -1699,7 +1698,7 @@ def Euler_Problem_49():
             if _a == _p or _b == _p:
                 continue
             # use dict comparison to check permutations
-            if Counter(str(_a)) == Counter(str(_p)) and Counter(str(_b)) == Counter(str(_p)):
+            if related_by_digit_permutation(_a, _p) and related_by_digit_permutation(_b, _p):
                 qualified_tuples.append((_a, _p, _b))
     return qualified_tuples
 
@@ -2333,3 +2332,60 @@ def Euler_Problem_67():
     arr = [[int(_z) for _z in _y.split(' ') if len(_z) > 0] for _y in inp_arr.split('\n')]
     arr = [_l for _l in arr if len(_l) > 0]
     return max_sum_path_in_triangle(arr)
+
+@timeit
+def Euler_Problem_69(bound=10**6):
+    '''
+    Euler's Totient function, φ(n) [sometimes called the phi function], is used to determine the number of numbers less than n which are relatively prime to n. For example, as 1, 2, 4, 5, 7, and 8, are all less than nine and relatively prime to nine, φ(9)=6.
+
+    n	Relatively Prime	φ(n)	n/φ(n)
+    2	1                	1	    2
+    3	1,2	                2   	1.5
+    4	1,3	                2   	2
+    5	1,2,3,4	            4	    1.25
+    6	1,5	                2	    3   
+    7	1,2,3,4,5,6	        6	    1.1666...
+    8	1,3,5,7	            4	    2
+    9	1,2,4,5,7,8	        6	    1.5
+    10	1,3,7,9	            4	    2.5
+    It can be seen that n=6 produces a maximum n/φ(n) for n ≤ 10.
+    
+    Find the value of n ≤ 1,000,000 for which n/φ(n) is a maximum.
+    '''
+    from subroutines import Factorizer, euler_totient
+    fac = Factorizer(bound=bound)
+
+    # initialize the answer to be returned
+    max_ratio, best_num = 1.0, 0
+
+    for num in range(2, bound+1):
+        factors = fac.factorize(num).keys()
+        ratio = num / euler_totient(num, factors)
+        if ratio > max_ratio:
+            max_ratio, best_num = ratio, num
+    return max_ratio, best_num
+
+@timeit
+def Euler_Problem_70(bound=10**7):
+    '''
+    Euler's Totient function, φ(n) [sometimes called the phi function], is used to determine the number of positive numbers less than or equal to n which are relatively prime to n. For example, as 1, 2, 4, 5, 7, and 8, are all less than nine and relatively prime to nine, φ(9)=6.
+    The number 1 is considered to be relatively prime to every positive number, so φ(1)=1.
+    Interestingly, φ(87109)=79180, and it can be seen that 87109 is a permutation of 79180.
+    Find the value of n, 1 < n < 10^7, for which φ(n) is a permutation of n and the ratio n/φ(n) produces a minimum.
+    '''
+    from subroutines import Factorizer, euler_totient, related_by_digit_permutation
+    fac = Factorizer(bound)
+
+    # initialize the answer to be returned
+    min_ratio, best_num = -1.0, 0
+    for num in range(2, bound):
+        factors = fac.factorize(num).keys()
+        totient = euler_totient(num, factors)
+        ratio   = num / totient
+        if related_by_digit_permutation(num, totient):
+            if min_ratio < 0 or ratio < min_ratio:
+                print(num, totient)
+                min_ratio, best_num = ratio, num
+    return min_ratio, best_num
+
+

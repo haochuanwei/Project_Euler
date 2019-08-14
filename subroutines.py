@@ -753,3 +753,23 @@ def solve_pells_equation(n):
         if target == 1:
             return (_frac.numerator, _frac.denominator)
     return (-1, -1)
+
+def euler_totient(num, factors):
+    '''
+    Given a number n and all its distinct prime factors, compute φ(n).
+    The insight is that for every distinct prime factor p of a number n, the portion of numbers coprime to A "decays" by exactly (1/p).
+    '''
+    from decimal import Decimal
+    totient = Decimal(num)
+    for _factor in factors:
+        totient *= Decimal(_factor - 1) / Decimal(_factor)
+    return int(totient)  
+
+def related_by_digit_permutation(a, b):
+    '''
+    Check if two numbers are related by digit permutation.
+    '''
+    from collections import Counter
+    return (Counter(str(a)) == Counter(str(b)))
+
+
