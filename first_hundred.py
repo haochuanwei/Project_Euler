@@ -2388,4 +2388,43 @@ def Euler_Problem_70(bound=10**7):
                 min_ratio, best_num = ratio, num
     return min_ratio, best_num
 
+@timeit
+def Euler_Problem_71(bound=10**6):
+    '''
+    Consider the fraction, n/d, where n and d are positive integers. If n<d and HCF(n,d)=1, it is called a reduced proper fraction.
+    If we list the set of reduced proper fractions for d ≤ 8 in ascending order of size, we get:
+    1/8, 1/7, 1/6, 1/5, 1/4, 2/7, 1/3, 3/8, 2/5, 3/7, 1/2, 4/7, 3/5, 5/8, 2/3, 5/7, 3/4, 4/5, 5/6, 6/7, 7/8
+    It can be seen that 2/5 is the fraction immediately to the left of 3/7.
+    By listing the set of reduced proper fractions for d ≤ 1,000,000 in ascending order of size, find the numerator of the fraction immediately to the left of 3/7.
+    '''
+    def brute_force():
+        ''' 
+        idea: we only have to consider denominators indivisible by 7, and numerators right below (3/7) * denominator.
+        '''
+        from math import floor
+        from fractions import Fraction
 
+        best_ratio, target = Fraction(0, 1), Fraction(3, 7)
+        for denom in range(2, bound+1):
+            # skip denominators divisible by 7
+            if denom % 7 == 0:
+                continue
+            numer = floor((3 / 7) * denom)
+            ratio = Fraction(numer, denom)
+            assert ratio < target
+            if ratio > best_ratio:
+                best_ratio = ratio
+        return best_ratio.numerator, best_ratio.denominator
+
+    def insightful():
+        '''
+        idea: actually, we can keep adding 3 to the numerator, and 7 to the denominator. Doing this starting from 2/5 will produce the closest lower estimate of 3/7.
+        '''
+        denom = 7 * (bound // 7) + 5
+        # make sure that denom is right below bound
+        if denom > bound:
+            denom -= 7
+        numer = 3 * (denom // 7) + 2
+        return numer, denom
+    
+    return insightful()
