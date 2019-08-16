@@ -2428,3 +2428,23 @@ def Euler_Problem_71(bound=10**6):
         return numer, denom
     
     return insightful()
+
+@timeit
+def Euler_Problem_72(bound=10**6):
+    '''
+    Consider the fraction, n/d, where n and d are positive integers. If n<d and HCF(n,d)=1, it is called a reduced proper fraction.
+    If we list the set of reduced proper fractions for d ≤ 8 in ascending order of size, we get:
+    1/8, 1/7, 1/6, 1/5, 1/4, 2/7, 1/3, 3/8, 2/5, 3/7, 1/2, 4/7, 3/5, 5/8, 2/3, 5/7, 3/4, 4/5, 5/6, 6/7, 7/8
+    It can be seen that there are 21 elements in this set.
+    How many elements would be contained in the set of reduced proper fractions for d ≤ 1,000,000?
+    '''
+    # idea: for each denominator, the numerator needs to be coprime to it.
+    from subroutines import Factorizer, euler_totient
+    fac = Factorizer(bound)
+
+    count = 0
+    for num in range(2, bound+1):
+        factors = fac.factorize(num).keys()
+        totient = euler_totient(num, factors)
+        count  += totient
+    return count
