@@ -772,4 +772,195 @@ def related_by_digit_permutation(a, b):
     from collections import Counter
     return (Counter(str(a)) == Counter(str(b)))
 
+class LatticeGraph2D(object):
+    '''
+    A 2-dimensional lattice where adjacent vertices may be connected.
+    '''
+    def __init__(self, matrix, neighbor_function, weight_function):
+        '''
+        Initialize the lattice by defining which vertices are connected without assuming the size of the lattice.
+        neighbor_function(row_idx, col_idx, row_dim, col_dim) -- returns a list of (row_idx, col_idx) neighbors.
+        weight_function(matrix, head_row_idx, head_col_idx, tail_row_idx, tail_col_idx) -- returns the weight of the edge from head to tail.
+        '''
+        self.lattice = matrix
+        self.row_dim = len(self.lattice)
+        self.col_dim = len(self.lattice[0])
+        self.neighbor_function = neighbor_function
+        self.weight_function   = weight_function
+        self.consistency_check()
+        self.build_adjacency_list()
 
+    def consistency_check(self):
+        for _row in self.lattice:
+            assert len(_row) == self.col_dim
+        assert callable(self.neighbor_function)
+        assert callable(self.weight_function)
+
+    def flatten_index(self, i, j):
+        return i * self.col_dim + j
+
+    def unflatten_index(self, idx):
+        return idx // self.col_dim, idx % self.col_dim
+
+    def build_adjacency_list(self):
+        # initialize adjacency list
+        self.adjacency_list = []
+        for i in range(self.row_dim):
+            for j in range(self.col_dim):
+                # get index for the current vertex and check consistency with the adjacency list 
+                head_index   = self.flatten_index(i, j)
+                assert len(self.adjacency_list) == head_index
+
+                # build the contribution to the adjacency list from the current vertex
+                connectivity = [] 
+                neighbors    = self.neighbor_function(i, j, self.row_dim, self.col_dim)
+                for _neighbor_i, _neighbor_j in neighbors:
+                    tail_index = self.flatten_index(_neighbor_i, _neighbor_j)
+                    weight     = self.weight_function(self.lattice, i, j, _neighbor_i, _neighbor_j)
+                    connectivity.append((tail_index, weight))
+                
+                self.adjacency_list.append(connectivity[:])
+
+    def dijkstra_shortest_paths(self, i, j):
+        '''
+        Find the shortest path from source (i, j).
+        '''
+        distances, paths = Dijkstra(self.adjacency_list, self.flatten_index(i, j))
+        return distances, paths
+
+def Dijkstra(adjacency_dist_list, i):
+    '''
+    Dijkstra's algorithm for shortest paths where edge lengths are non-negative.
+    Args:
+    adjacency_dist_list - adjacency list where adjacency_dist_list[i] is a list of (neighbor, distance) tuples.
+    i - the source index to compute the distance from.
+    '''
+    from datastruct import Heap
+    # determine the number of nodes
+    n = len(adjacency_dist_list)
+    # initialize a list of distances
+    distances = [-1] * n
+    # initialize a list of shortest paths
+    paths = [[]] * n
+    # put the source node as a (distance, index) tuple in a heap
+    H = Heap([(0, i, [i])])
+    # an iteration similar to breadth-first search
+    while len(H.values) > 0:
+        dist_ij, j, path_ij = H.extract()
+        # if node j has not been visited before, update its distances and put its unvisited neighbors in the heap
+        if distances[j] < 0:
+            distances[j] = dist_ij
+            paths[j] = path_ij
+            for k, dist_jk in adjacency_dist_list[j]:
+                assert dist_jk >= 0
+                if distances[k] < 0:
+                    H.insert((dist_ij+dist_jk, k, path_ij + [k]))
+    return distances, paths
+
+class FloydWarshall(object):
+    '''
+    Implementation of the Floyd-Warshall algorithm which computes all-pairs shortest distances and paths.
+    Uses O(n^2) memory with optimized constant factor.
+    Args:
+    numVertices - the number of vertices in the graph. 
+    edges - the edges in the graph, each being a (head, tail, weight) tuple.
+    '''
+    def __init__(self, numVertices, edges):
+        '''
+        Initialize attributes of the following purpose:
+        self.__minDistance - an array to hold shortest distances
+        self.__maxInternal - an array to hold max internal node indices in each path, which are used to restore paths
+        self.__capInternal - a parameter that controls the largest internal node that is permitted
+        self.__numVertices - the number of vertices in the graph
+        self.__negativeCycle - whether the graph is known to contain a negative cycle
+        Args:
+        numVertices - the number of vertices in the graph. 
+        edges - the edges in the graph, each being a (head, tail, weight) tuple.
+        '''
+        self.__minDistance = numpy.full((numVertices, numVertices), numpy.inf)
+        self.__maxInternal = numpy.full((numVertices, numVertices), numpy.NAN)
+        for i in range(0, numVertices):
+            # distances from a node to itself are zero
+            self.__minDistance[i][i] = 0
+            # an empty path has no internal node
+            self.__maxInternal[i][i] = -1
+        # update distances for single-edge paths that don't contain internal nodes
+        for _edge in edges:
+            i, j, weight = _edge
+            self.__minDistance[i][j] = weight
+            # a single-edge path has no internal node
+            self.__maxInternal[i][j] = -1
+
+        self.__capInternal = -1
+        self.__numVertices = numVertices
+        self.__negativeCycle = False
+
+    def __bumpCapInternal(self, verbose=True):
+        '''
+        Allow one more node to be used as internal nodes in a path.
+        Recompute the shortest distances and max internal nodes accordingly.
+        '''
+        # if all nodes are already allowed or if a negative cycle has been detected, halt and return
+        if self.__capInternal >= self.__numVertices - 1 or self.__negativeCycle:
+            return
+        else:
+            if verbose:
+                print("Now running {0} out of {1} iterations.. ".format(self.__capInternal+2, self.__numVertices), end="\r")
+            self.__capInternal += 1
+            self.__updateDistances()
+
+    def __updateDistances(self):
+        '''
+        Subroutine used in a single iteration to update all the pairwise shortest distances after bumpCapInternal() allows another internal node.
+        '''
+        for i in range(0, self.__numVertices):
+            for j in range(0, self.__numVertices):
+                self.__updateSinglePair(i, j)
+
+    def __updateSinglePair(self, i, j):
+        '''
+        Subroutine to update the shortest disance, and the max-index internal node associated, from node i and node j.
+        '''
+        updateValue = self.__minDistance[i][self.__capInternal] + self.__minDistance[self.__capInternal][j]
+        # distance updates can be done in-place because all values used to compute updateValue sit in the union of a row and a column that never get themselves updated in this iteration. This saves one copy of self.__minDistance from memory.
+        if updateValue < self.__minDistance[i][j]:
+            # there is a negative cycle if and only if node i has a negative path to itself
+            if i == j:
+                # sanity check that the cycle length is indeed negative; assertion error indicates a bug in the initialization of distances
+                assert updateValue < 0
+                self.__negativeCycle = True
+                return
+            self.__minDistance[i][j] = updateValue
+            self.__maxInternal[i][j] = self.__capInternal
+
+    def getDistances(self):
+        '''
+        Launch the algorithm to compute shortest distances and paths.
+        '''
+        for iteration in range(self.__capInternal, self.__numVertices-1):
+            self.__bumpCapInternal()
+        if self.__negativeCycle:
+            raise ValueError("The graph contains a negative cycle.")
+        return self.__minDistance
+
+    def getPath(self, source, destination):
+        '''
+        Backtrack and compute the shortest path from the source node to the destination node.
+        If a path does exist, the running time is linear to the number of hops between source and destination.
+        '''
+        # base case: destination unreachable from source
+        if numpy.isinf(self.__minDistance[source][destination]):
+            assert numpy.isnan(self.__maxInternal[source][destination])
+            return []
+        # base case: destination is the same as source
+        if source == destination:
+            return [source]
+
+        internalNode = int(self.__maxInternal[source][destination])
+        # base case: destination is one hop from source
+        if internalNode < 0:
+            return [source, destination]
+        # common case: internal node found, start recursive call
+        if internalNode >= 0:
+            return self.getPath(source, internalNode)[:-1] + self.getPath(internalNode, destination)
+        

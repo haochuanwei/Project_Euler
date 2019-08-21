@@ -2448,3 +2448,135 @@ def Euler_Problem_72(bound=10**6):
         totient = euler_totient(num, factors)
         count  += totient
     return count
+
+@timeit
+def Euler_Problem_81():
+    '''
+    The equations don't show very well in text editors. Go to: 
+    https://projecteuler.net/problem=81
+    for the original problem description.
+    '''
+    from subroutines import LatticeGraph2D
+
+    def parse_input_to_matrix():
+        from custom_config import get_attachment_path 
+        with open(get_attachment_path(81), 'r') as f:
+            inp_arr = f.read()
+        # turn raw input into an  array
+        arr = [[int(_z) for _z in _y.split(',') if len(_z) > 0] for _y in inp_arr.split('\n')]
+        arr = [_l for _l in arr if len(_l) > 0]
+        return arr
+
+    def get_neighbor_indices(i, j, i_dim, j_dim):
+        assert i < i_dim and j < j_dim
+        neighbors = []
+        # allowed to move down or to the right
+        if i < i_dim-1:
+            neighbors.append((i+1, j))
+        if j < j_dim-1:
+            neighbors.append((i, j+1))
+        return neighbors
+    
+    def get_edge_weight(matrix, head_i, head_j, tail_i, tail_j):
+        return matrix[tail_i][tail_j]
+
+    def solve():
+        matrix  = parse_input_to_matrix()
+        lattice = LatticeGraph2D(**{"matrix": matrix, "neighbor_function": get_neighbor_indices, "weight_function": get_edge_weight})
+        distances, paths = lattice.dijkstra_shortest_paths(0, 0)
+        return matrix[0][0] + distances[-1], [lattice.unflatten_index(idx) for idx in paths[-1]]
+    
+    return solve()
+
+@timeit
+def Euler_Problem_82():
+    '''
+    The equations don't show very well in text editors. Go to: 
+    https://projecteuler.net/problem=82
+    for the original problem description.
+    '''
+    from subroutines import LatticeGraph2D
+
+    def parse_input_to_matrix():
+        from custom_config import get_attachment_path 
+        with open(get_attachment_path(82), 'r') as f:
+            inp_arr = f.read()
+        # turn raw input into an  array
+        arr = [[int(_z) for _z in _y.split(',') if len(_z) > 0] for _y in inp_arr.split('\n')]
+        arr = [_l for _l in arr if len(_l) > 0]
+        return arr
+
+    def get_neighbor_indices(i, j, i_dim, j_dim):
+        assert i < i_dim and j < j_dim
+        neighbors = []
+        # allowed to move up, down, or to the right
+        if i > 0:
+            neighbors.append((i-1, j))
+        if i < i_dim-1:
+            neighbors.append((i+1, j))
+        if j < j_dim-1:
+            neighbors.append((i, j+1))
+        return neighbors
+    
+    def get_edge_weight(matrix, head_i, head_j, tail_i, tail_j):
+        return matrix[tail_i][tail_j]
+
+    def solve():
+        matrix  = parse_input_to_matrix()
+        lattice = LatticeGraph2D(**{"matrix": matrix, "neighbor_function": get_neighbor_indices, "weight_function": get_edge_weight})
+        best_dist = None
+        best_path = None
+        # scan through possibilities connecting the first column and the last column
+        for source_row_idx in range(0, lattice.row_dim):
+            distances, paths = lattice.dijkstra_shortest_paths(source_row_idx, 0)
+            for destination_row_idx in range(0, lattice.row_dim):
+                destination_flattened_idx = lattice.flatten_index(destination_row_idx, lattice.col_dim-1)
+                _dist = matrix[source_row_idx][0] + distances[destination_flattened_idx]
+                if best_dist is None or _dist < best_dist:
+                    best_dist, best_path = _dist, paths[destination_flattened_idx]
+        return best_dist, [lattice.unflatten_index(idx) for idx in best_path]
+    
+    return solve()
+
+@timeit
+def Euler_Problem_83():
+    '''
+    The equations don't show very well in text editors. Go to: 
+    https://projecteuler.net/problem=83
+    for the original problem description.
+    '''
+    from subroutines import LatticeGraph2D
+
+    def parse_input_to_matrix():
+        from custom_config import get_attachment_path 
+        with open(get_attachment_path(83), 'r') as f:
+            inp_arr = f.read()
+        # turn raw input into an  array
+        arr = [[int(_z) for _z in _y.split(',') if len(_z) > 0] for _y in inp_arr.split('\n')]
+        arr = [_l for _l in arr if len(_l) > 0]
+        return arr
+
+    def get_neighbor_indices(i, j, i_dim, j_dim):
+        assert i < i_dim and j < j_dim
+        neighbors = []
+        # allowed to move up, down, to the left, or to the right
+        if i > 0:
+            neighbors.append((i-1, j))
+        if i < i_dim-1:
+            neighbors.append((i+1, j))
+        if j > 0:
+            neighbors.append((i, j-1))
+        if j < j_dim-1:
+            neighbors.append((i, j+1))
+        return neighbors
+    
+    def get_edge_weight(matrix, head_i, head_j, tail_i, tail_j):
+        return matrix[tail_i][tail_j]
+
+    def solve():
+        matrix  = parse_input_to_matrix()
+        lattice = LatticeGraph2D(**{"matrix": matrix, "neighbor_function": get_neighbor_indices, "weight_function": get_edge_weight})
+        distances, paths = lattice.dijkstra_shortest_paths(0, 0)
+        return matrix[0][0] + distances[-1], [lattice.unflatten_index(idx) for idx in paths[-1]]
+    
+    return solve()
