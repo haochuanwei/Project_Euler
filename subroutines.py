@@ -1,3 +1,8 @@
+'''
+Subroutines that may get used repeatedly across different problems.
+'''
+# pylint: disable=line-too-long, bad-whitespace
+
 def least_divisor(num, floor=2):
     '''
     Find the least divisor of a number, above some floor.
@@ -13,10 +18,7 @@ def has_nontrivial_divisor(num):
     Determines if a number has a nontrivial divisor.
     '''
     divisor = least_divisor(num)
-    if divisor < num:
-        return True
-    else:
-        return False
+    return bool(divisor < num)
 
 def is_a_palindrome(num):
     '''
@@ -30,7 +32,7 @@ def is_a_palindrome(num):
             return False
     return True
 
-class Factorizer(object):
+class Factorizer(): # pylint: disable=too-few-public-methods
     '''
     A factorizer that makes use of multiple data structures.
     This is intended to be efficient for repeated factorizations.
@@ -123,7 +125,7 @@ def get_sum_proper_divisors(factorization):
         original_number *= (_base ** _power)
     return sum_divisors - original_number
 
-class DigitwiseInteger(object):
+class DigitwiseInteger():
     '''
     Integer that is represented by the value on each digit.
     '''
@@ -132,13 +134,13 @@ class DigitwiseInteger(object):
         Initialize from a usual integer.
         '''
         from collections import defaultdict
-        self.orderDict = defaultdict(int)
+        self.order_dict = defaultdict(int)
         _digit = 0
         _value = num
         if _value == 0:
-            return {0: 0}
+            self.order_dict[0] = 0
         while _value != 0:
-            self.orderDict[_digit] = _value % 10
+            self.order_dict[_digit] = _value % 10
             _digit += 1
             _value = _value // 10
 
@@ -147,65 +149,62 @@ class DigitwiseInteger(object):
         Reconstruct the original number.
         '''
         retval = 0
-        for _digit, _value in self.orderDict.items():
+        for _digit, _value in self.order_dict.items():
             retval += _value * (10 ** _digit)
         return retval
 
     def __consistency_check(self):
         assert DigitwiseInteger(self.reconstruct()).reconstruct() == self.reconstruct()
 
-    def correct_digits(self, orderDict):
+    def multiply_by_constant(self, multiplier, in_place=False, check_result=False):
         '''
-        Promote digits with value greater than or equal to 10.
-        '''
-        from collections import defaultdict
-        retDict = defaultdict(int)
-        digits = sorted(orderDict.keys())
-        # check digits from low to high
-        for _digit in digits:
-            _value = orderDict[_digit]
-            # pickup value
-            retDict[_digit] += _value
-            # promote if appropriate
-            if retDict[_digit] >= 10:
-                retDict[_digit+1] += retDict[_digit] // 10
-                retDict[_digit]    = retDict[_digit] % 10
-        return retDict
-
-    def multiply_by_constant(self, c, in_place=False, check_result=False):
-        '''
-        Subroutine to multiply a number by c.
-        orderDict -- defaultdict of magnitude -> value mapping.
+        Subroutine to multiply a number by multiplier.
         Eg. {0: 1, 1: 3, 2: 6} stands for 1*10^1 + 3*10^1 + 6*10^2 = 631.
         '''
         from collections import defaultdict
+        def correct_digits(order_dict):
+            '''
+            Promote digits with value greater than or equal to 10.
+            '''
+            ret_dict = defaultdict(int)
+            digits = sorted(order_dict.keys())
+            # check digits from low to high
+            for _digit in digits:
+                _value = order_dict[_digit]
+                # pickup value
+                ret_dict[_digit] += _value
+                # promote if appropriate
+                if ret_dict[_digit] >= 10:
+                    ret_dict[_digit+1] += ret_dict[_digit] // 10
+                    ret_dict[_digit]    = ret_dict[_digit] % 10
+            return ret_dict
+
         # perform calculation digit-wise
-        retDict = defaultdict(int)
-        for _key, _value in self.orderDict.items():
-            multiplied = _value * c
+        ret_dict = defaultdict(int)
+        for _key, _value in self.order_dict.items():
+            multiplied = _value * multiplier
             shift = 0
             while multiplied > 0 or shift == 0:
-                retDict[_key+shift] += (multiplied % 10)
+                ret_dict[_key+shift] += (multiplied % 10)
                 multiplied = multiplied // 10
                 shift += 1
         # promote digits that have value greater than 10
-        retDict = self.correct_digits(retDict)
+        ret_dict = correct_digits(ret_dict)
         if in_place:
-            self.orderDict = defaultdict(int)
-            self.orderDict.update(retDict)
+            self.order_dict = defaultdict(int)
+            self.order_dict.update(ret_dict)
             if check_result:
                 self.__consistency_check()
-        return retDict
+        return ret_dict
 
-def factorial(n):
+def factorial(num):
     '''
     Factorial.
     '''
-    assert isinstance(n, int) and n >= 0
-    if n == 0:
+    assert isinstance(num, int) and num >= 0
+    if num == 0:
         return 1
-    else:
-        return n * factorial(n-1)
+    return num * factorial(num-1)
 
 def is_prime_given_factorization(factorization):
     '''
@@ -229,9 +228,9 @@ def is_prime_given_primes(num, primes):
             return False
     return True
 
-def all_primes_under(n):
+def all_primes_under(bound):
     '''
-    Compute all the prime numbers below n.
+    Compute all the prime numbers below a bound.
     '''
     def is_prime_with_cache(num, cache):
         '''
@@ -245,16 +244,16 @@ def all_primes_under(n):
                 break
             if num % _p == 0:
                 return False
-        cache.append(num) 
-        return True        
+        cache.append(num)
+        return True
 
     # first use a list for keeping primes in ascending order
     cache_primes = []
-    for num in range(2, n):
-        is_prime_with_cache(num, cache_primes)
+    for candidate in range(2, bound):
+        is_prime_with_cache(candidate, cache_primes)
     return cache_primes[:]
 
-def is_m_to_n_pandigital(num, m, n):
+def is_m_to_n_pandigital(num, bound_m, bound_n):
     '''
     Determine if a number is m-to-n pandigital.
     '''
@@ -266,14 +265,12 @@ def is_m_to_n_pandigital(num, m, n):
             return False
         digit_count[_digit] = 1
     target_count = dict()
-    for _d in range(m, n+1):
+    for _d in range(bound_m, bound_n+1):
         target_count[str(_d)] = 1
     # compare two sets
     if digit_count == target_count:
         return True
-    else:
-        print(digit_count, target_count)
-        return False
+    return False
 
 def two_sum(arr, num):
     '''
@@ -281,10 +278,10 @@ def two_sum(arr, num):
     '''
     combinations = []
     assert isinstance(arr, set)
-    for a in arr:
-        b = num - a
-        if b >= a and b in arr:
-            combinations.append((a, b))
+    for term_a in arr:
+        term_b = num - term_a
+        if term_b >= term_a and term_b in arr:
+            combinations.append((term_a, term_b))
     return combinations
 
 def is_triangular(num):
@@ -294,12 +291,9 @@ def is_triangular(num):
     from math import floor, sqrt
     assert isinstance(num, int) and num > 0
     near_sqrt = floor(sqrt(2 * num))
-    if int((1/2) * near_sqrt * (near_sqrt + 1)) == num:
-        return True
-    else:
-        return False
+    return bool(int((1/2) * near_sqrt * (near_sqrt + 1)) == num)
 
-def permutations_m_to_n_str(m, n):
+def permutations_m_to_n_str(bound_m, bound_n):
     '''
     Get all permutations of digits between m and n, in string form.
     Example:
@@ -311,75 +305,84 @@ def permutations_m_to_n_str(m, n):
         Assumes that all existing permutations have the same length.
         '''
         # base case: no permutation so far
-        if len(perms) < 1:
+        if not perms:
             return [new_digit]
         # common case
         perm_length = len(perms[0])
         retlist = []
         for _perm in perms:
             new_perms = [(_perm[:i] + new_digit + _perm[i:]) for i in range(0, perm_length)]
-            new_perms.append(_perm + new_digit) 
+            new_perms.append(_perm + new_digit)
             retlist += new_perms
         return retlist
     permutations = []
-    for _d in range(m, n+1):
+    for _d in range(bound_m, bound_n+1):
         permutations = add(permutations, str(_d))
     return permutations
 
-def get_triangulars(n):
+def get_triangulars(num):
     '''
     Get the first n triangular numbers.
     '''
-    return [int(i * (i + 1) / 2) for i in range(1, n+1)]
+    return [int(i * (i + 1) / 2) for i in range(1, num+1)]
 
-def get_squares(n):
+def get_squares(num):
     '''
     Get the first n triangular numbers.
     '''
-    return [int(i ** 2) for i in range(1, n+1)]
+    return [int(i ** 2) for i in range(1, num+1)]
 
-def get_pentagonals(n):
+def get_pentagonals(num):
     '''
     Get the first n pentagonal numbers.
     '''
-    return [int(i * (3 * i - 1) / 2) for i in range(1, n+1)]
+    return [int(i * (3 * i - 1) / 2) for i in range(1, num+1)]
 
-def get_hexagonals(n):
+def get_hexagonals(num):
     '''
     Get the first n hexagonal numbers.
     '''
-    return [int(i * (2 * i - 1)) for i in range(1, n+1)]
+    return [int(i * (2 * i - 1)) for i in range(1, num+1)]
 
-def get_heptagonals(n):
+def get_heptagonals(num):
     '''
     Get the first n heptagonal numbers.
     '''
-    return [int(i * (5 * i - 3) / 2) for i in range(1, n+1)]
+    return [int(i * (5 * i - 3) / 2) for i in range(1, num+1)]
 
-def get_octagonals(n):
+def get_octagonals(num):
     '''
     Get the first n octagonal numbers.
     '''
-    return [int(i * (3 * i - 2)) for i in range(1, n+1)]
+    return [int(i * (3 * i - 2)) for i in range(1, num+1)]
 
-class Modulos(object):
+class Modulos():
     '''
     Basic computations in a modulos scope.
     This is equivalent to the Z_n group.
     '''
     def __init__(self, mod):
         self.__mod = mod
-   
+
     def identity(self, num):
+        '''
+        The identity operator in Z_n.
+        '''
         return num % self.__mod
 
-    def add(self, a, b):
-        return self.identity(a + b)
+    def add(self, term_a, term_b):
+        '''
+        The addition operator in Z_n.
+        '''
+        return self.identity(term_a + term_b)
 
-    def multiply(self, a, b):
-        return self.identity(self.identity(a) * self.identity(b))
+    def multiply(self, term_a, term_b):
+        '''
+        The multiplication operator in Z_n.
+        '''
+        return self.identity(self.identity(term_a) * self.identity(term_b))
 
-class Combination(object):
+class Combination(): # pylint: disable=too-few-public-methods
     '''
     Calculates n-choose-k combinations.
     Uses a cache for repeated calcuation.
@@ -387,7 +390,7 @@ class Combination(object):
     def __init__(self):
         self.cache = {}
 
-    def n_choose_k(self, n, k):
+    def n_choose_k(self, n, k): # pylint: disable=invalid-name
         '''
         Computes nCk, i.e. n-choose-k.
         '''
@@ -404,18 +407,21 @@ class Combination(object):
         elif k > n // 2:
             value = self.n_choose_k(n, n-k)
         # common case
-        else:    
+        else:
             value = self.n_choose_k(n, k-1) * (n - k + 1) / k
         # store result to cache
         self.cache[(n, k)] = int(value)
         return int(value)
 
-class TexasHoldem(object):
+class TexasHoldem():
+    '''
+    Compares Poker hands according to the rules of Texas Holdem.
+    '''
     def __init__(self):
         self.value_mapping = {
-        '2':   2, '3':  3, '4':  4, '5':  5,
-        '6':   6, '7':  7, '8':  8, '9':  9,
-        'T':  10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14,
+            '2':   2, '3':  3, '4':  4, '5':  5,
+            '6':   6, '7':  7, '8':  8, '9':  9,
+            'T':  10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14,
         }
 
     def values_and_suites(self, cards):
@@ -453,7 +459,7 @@ class TexasHoldem(object):
             return tuple([8] + list(straight)[1:])
         return False
 
-    def is_four_of_a_kind(self, value_count, suite_count):
+    def is_four_of_a_kind(self, value_count, suite_count): # pylint: disable=unused-argument, no-self-use
         '''
         Check if a hand is a four of a kind.
         '''
@@ -467,7 +473,7 @@ class TexasHoldem(object):
                 return (7, quartuple, single)
         return False
 
-    def is_full_house(self, value_count, suite_count):
+    def is_full_house(self, value_count, suite_count): # pylint: disable=unused-argument, no-self-use
         '''
         Check if a hand is a full house.
         '''
@@ -481,7 +487,7 @@ class TexasHoldem(object):
                 return (6, triple, double)
         return False
 
-    def is_flush(self, value_count, suite_count):
+    def is_flush(self, value_count, suite_count): # pylint: disable=no-self-use
         '''
         Check if a hand is a flush.
         '''
@@ -491,7 +497,7 @@ class TexasHoldem(object):
                 return (5, high_card)
         return False
 
-    def is_straight(self, value_count, suite_count):
+    def is_straight(self, value_count, suite_count): # pylint: disable=unused-argument, no-self-use
         '''
         Check if a hand is a straight.
         '''
@@ -500,7 +506,7 @@ class TexasHoldem(object):
             return (4, high_end)
         return False
 
-    def is_three_of_a_kind(self, value_count, suite_count):
+    def is_three_of_a_kind(self, value_count, suite_count): # pylint: disable=unused-argument, no-self-use
         '''
         Check if a hand is a three of a kind.
         '''
@@ -516,7 +522,7 @@ class TexasHoldem(object):
                 return tuple([3, triple] + high_cards)
         return False
 
-    def is_two_pairs(self, value_count, suite_count):
+    def is_two_pairs(self, value_count, suite_count): # pylint: disable=unused-argument, no-self-use
         '''
         Check if a hand is a two pairs.
         '''
@@ -532,7 +538,7 @@ class TexasHoldem(object):
                 return tuple([2] + doubles + [high_card])
         return False
 
-    def is_one_pair(self, value_count, suite_count):
+    def is_one_pair(self, value_count, suite_count): # pylint: disable=unused-argument, no-self-use
         '''
         Check if a hand is a one pair.
         '''
@@ -547,7 +553,7 @@ class TexasHoldem(object):
             return tuple([1] + [double] + high_cards)
         return False
 
-    def is_high_card(self, value_count, suite_count):
+    def is_high_card(self, value_count, suite_count): # pylint: disable=unused-argument, no-self-use
         '''
         Check if a hand is a high card.
         '''
@@ -566,14 +572,15 @@ class TexasHoldem(object):
             matched = _possibility(value_count, suite_count)
             if matched:
                 return matched
+        raise ValueError("Expected at least one type of hand to be matched.")
 
-class CliqueFinder(object):
+class CliqueFinder(): # pylint: disable=too-few-public-methods
     '''
     Given a graph, find the cliques in it.
     '''
     def __init__(self, adjacency_list):
-        self.A = adjacency_list[:]
-        self.n = len(self.A)
+        self.adjacency_list = adjacency_list[:]
+        self.num_vertices = len(self.adjacency_list)
         self.cliques = {}
         self.compute(2)
 
@@ -590,8 +597,8 @@ class CliqueFinder(object):
         k_cliques = set()
         # base case: k = 2
         if k == 2:
-            for i in range(0, self.n):
-                for j in self.A[i]:
+            for i in range(0, self.num_vertices):
+                for j in self.adjacency_list[i]:
                     if i < j:
                         k_cliques.add((i, j))
         # common case: recursion
@@ -603,7 +610,7 @@ class CliqueFinder(object):
                 # use a dict to find vertices that are connected to everyone in the clique
                 degree = defaultdict(int)
                 for i in _clique:
-                    for j in self.A[i]:
+                    for j in self.adjacency_list[i]:
                         if not j in _clique_set:
                             degree[j] += 1
                 for _key in degree.keys():
@@ -619,7 +626,7 @@ def reverse_number(num):
     '''
     return int(str(num)[::-1])
 
-def XOR_decipher(text, key):
+def xor_decipher(text, key):
     '''
     Decipher a message using XOR.
     text -- a list of integers corresponding to the ASCII value of characters.
@@ -662,7 +669,7 @@ def max_sum_path_in_triangle(arr, row_idx=-1):
                     parent_value = points[i-1][j-1]
                 # common case: a middle element of a row
                 else:
-                    parent_value = max(points[i-1][j-1], points[i-1][j]) 
+                    parent_value = max(points[i-1][j-1], points[i-1][j])
                 tmp_row.append(parent_value + _row[j])
             points.append(tmp_row[:])
     return max(points[row_idx])
@@ -670,9 +677,9 @@ def max_sum_path_in_triangle(arr, row_idx=-1):
 def continued_fraction_representation(num, max_terms=10**5, check_loop_length=30):
     '''
     Warning: this implementation gets numerically unstable for long sequences.
-    Given a positive Decimal b > 1, represent it as a sequence of integers {a_n}, such that 
+    Given a positive Decimal b > 1, represent it as a sequence of integers {a_n}, such that
     b -> floor(b), a_1, a_2, ...
-    1 / (b - floor(b)) -> a_1, a_2, a_3, ... 
+    1 / (b - floor(b)) -> a_1, a_2, a_3, ...
     Also detects if such a sequence has a loop.
     '''
     from math import floor
@@ -688,7 +695,7 @@ def continued_fraction_representation(num, max_terms=10**5, check_loop_length=30
         int_part = floor(reciprocal)
         sequence.append(int_part)
         residue = reciprocal - Decimal(int_part)
-        # if the reciprocal has shown up before, we've found a loop in the sequence 
+        # if the reciprocal has shown up before, we've found a loop in the sequence
         identifier = str(reciprocal)
         identifier = identifier[:min(check_loop_length, len(identifier))]
         if identifier in reciprocal_monitor:
@@ -700,7 +707,7 @@ def continued_fraction_representation(num, max_terms=10**5, check_loop_length=30
 
 def sqrt_continued_fraction_generator(num):
     '''
-    Takes the square root of a number, build a continued fraction sequence and put that into a generator.
+    Takes the square root of a number, build a continued fraction sequence and put that into a generator
     '''
     import sympy
     return sympy.ntheory.continued_fraction_iterator(sympy.sqrt(num))
@@ -711,25 +718,25 @@ def compile_continued_fraction_representation(seq):
     '''
     from fractions import Fraction
     # sanity check
-    assert len(seq) > 0
+    assert seq
     # initialize the value to be returned by working backwards from the last number
     retval = Fraction(1, seq.pop())
     # keep going backwords till the start of the sequence
-    while len(seq) > 0:
+    while seq:
         retval = 1 / (seq.pop() + retval)
     return retval
 
-def solve_pells_equation(n):
+def solve_pells_equation(coeff_n):
     '''
     Solver of Pell's equation, i.e. x^2 - n * y^2 = 1.
     Makes use of continued fraction representation of sqrt(n).
-    Reference: 
+    Reference:
     https://en.wikipedia.org/wiki/Continued_fraction#Infinite_continued_fractions_and_convergents
     '''
-    assert isinstance(n, int) and n > 1
+    assert isinstance(coeff_n, int) and coeff_n > 1
     from fractions import Fraction
     # get the continued fraction sequence
-    sequence = sqrt_continued_fraction_generator(n)
+    sequence = sqrt_continued_fraction_generator(coeff_n)
     # keep a cache of the previous two terms
     cache = []
     # take advantage of that enumerate() and generators are both lazy
@@ -743,13 +750,13 @@ def solve_pells_equation(n):
             _frac = cache[-1] + Fraction(1, _term)
         # common case: recursion
         else:
-            _numer = _term * cache[-1].numerator + cache[-2].numerator 
-            _denom = _term * cache[-1].denominator + cache[-2].denominator 
+            _numer = _term * cache[-1].numerator + cache[-2].numerator
+            _denom = _term * cache[-1].denominator + cache[-2].denominator
             _frac  = Fraction(_numer, _denom)
             cache.pop(0)
         cache.append(_frac)
         # check the fraction
-        target = _frac.numerator ** 2 - n * _frac.denominator ** 2 
+        target = _frac.numerator ** 2 - coeff_n * _frac.denominator ** 2
         if target == 1:
             return (_frac.numerator, _frac.denominator)
     return (-1, -1)
@@ -763,16 +770,16 @@ def euler_totient(num, factors):
     totient = Decimal(num)
     for _factor in factors:
         totient *= Decimal(_factor - 1) / Decimal(_factor)
-    return int(totient)  
+    return int(totient)
 
-def related_by_digit_permutation(a, b):
+def related_by_digit_permutation(num_a, num_b):
     '''
     Check if two numbers are related by digit permutation.
     '''
     from collections import Counter
-    return (Counter(str(a)) == Counter(str(b)))
+    return Counter(str(num_a)) == Counter(str(num_b))
 
-class LatticeGraph2D(object):
+class LatticeGraph2D():
     '''
     A 2-dimensional lattice where adjacent vertices may be connected.
     '''
@@ -791,44 +798,60 @@ class LatticeGraph2D(object):
         self.build_adjacency_list()
 
     def consistency_check(self):
+        '''
+        Check that
+        (1) the lattice is indeed rectangular;
+        (2) the neighbor function is callable;
+        (3) the weight function is callable.
+        '''
         for _row in self.lattice:
             assert len(_row) == self.col_dim
         assert callable(self.neighbor_function)
         assert callable(self.weight_function)
 
     def flatten_index(self, i, j):
+        '''
+        Flatten a 2D index to a 1D index.
+        '''
         return i * self.col_dim + j
 
     def unflatten_index(self, idx):
+        '''
+        Unflatten a 1D index to a 2D index.
+        '''
         return idx // self.col_dim, idx % self.col_dim
 
     def build_adjacency_list(self):
+        '''
+        Given a neighbor function and a weight function, build an adjacency list with edge weights.
+        '''
         # initialize adjacency list
         self.adjacency_list = []
         for i in range(self.row_dim):
             for j in range(self.col_dim):
-                # get index for the current vertex and check consistency with the adjacency list 
+                # get index for the current vertex and check consistency with the adjacency list
                 head_index   = self.flatten_index(i, j)
                 assert len(self.adjacency_list) == head_index
 
                 # build the contribution to the adjacency list from the current vertex
-                connectivity = [] 
+                connectivity = []
                 neighbors    = self.neighbor_function(i, j, self.row_dim, self.col_dim)
                 for _neighbor_i, _neighbor_j in neighbors:
                     tail_index = self.flatten_index(_neighbor_i, _neighbor_j)
                     weight     = self.weight_function(self.lattice, i, j, _neighbor_i, _neighbor_j)
                     connectivity.append((tail_index, weight))
-                
+
+                # update adjacency list
                 self.adjacency_list.append(connectivity[:])
 
     def dijkstra_shortest_paths(self, i, j):
         '''
         Find the shortest path from source (i, j).
         '''
-        distances, paths = Dijkstra(self.adjacency_list, self.flatten_index(i, j))
+        distances, paths = dijkstra(self.adjacency_list, self.flatten_index(i, j))
         return distances, paths
 
-def Dijkstra(adjacency_dist_list, i):
+def dijkstra(adjacency_dist_list, i):
     '''
     Dijkstra's algorithm for shortest paths where edge lengths are non-negative.
     Args:
@@ -837,16 +860,16 @@ def Dijkstra(adjacency_dist_list, i):
     '''
     from datastruct import Heap
     # determine the number of nodes
-    n = len(adjacency_dist_list)
+    num_vertices = len(adjacency_dist_list)
     # initialize a list of distances
-    distances = [-1] * n
+    distances = [-1] * num_vertices
     # initialize a list of shortest paths
-    paths = [[]] * n
+    paths = [[]] * num_vertices
     # put the source node as a (distance, index) tuple in a heap
-    H = Heap([(0, i, [i])])
+    heap = Heap([(0, i, [i])])
     # an iteration similar to breadth-first search
-    while len(H.values) > 0:
-        dist_ij, j, path_ij = H.extract()
+    while heap.values:
+        dist_ij, j, path_ij = heap.extract()
         # if node j has not been visited before, update its distances and put its unvisited neighbors in the heap
         if distances[j] < 0:
             distances[j] = dist_ij
@@ -854,113 +877,114 @@ def Dijkstra(adjacency_dist_list, i):
             for k, dist_jk in adjacency_dist_list[j]:
                 assert dist_jk >= 0
                 if distances[k] < 0:
-                    H.insert((dist_ij+dist_jk, k, path_ij + [k]))
+                    heap.insert((dist_ij+dist_jk, k, path_ij + [k]))
     return distances, paths
 
-class FloydWarshall(object):
+class FloydWarshall():
     '''
     Implementation of the Floyd-Warshall algorithm which computes all-pairs shortest distances and paths.
     Uses O(n^2) memory with optimized constant factor.
     Args:
-    numVertices - the number of vertices in the graph. 
+    num_vertices - the number of vertices in the graph.
     edges - the edges in the graph, each being a (head, tail, weight) tuple.
     '''
-    def __init__(self, numVertices, edges):
+    def __init__(self, num_vertices, edges):
         '''
         Initialize attributes of the following purpose:
-        self.__minDistance - an array to hold shortest distances
-        self.__maxInternal - an array to hold max internal node indices in each path, which are used to restore paths
-        self.__capInternal - a parameter that controls the largest internal node that is permitted
-        self.__numVertices - the number of vertices in the graph
-        self.__negativeCycle - whether the graph is known to contain a negative cycle
+        self.__min_distance - an array to hold shortest distances
+        self.__max_internal - an array to hold max internal node indices in each path, which are used to restore paths
+        self.__cap_internal - a parameter that controls the largest internal node that is permitted
+        self.__num_vertices - the number of vertices in the graph
+        self.__negative_cycle - whether the graph is known to contain a negative cycle
         Args:
-        numVertices - the number of vertices in the graph. 
+        num_vertices - the number of vertices in the graph.
         edges - the edges in the graph, each being a (head, tail, weight) tuple.
         '''
-        self.__minDistance = numpy.full((numVertices, numVertices), numpy.inf)
-        self.__maxInternal = numpy.full((numVertices, numVertices), numpy.NAN)
-        for i in range(0, numVertices):
+        import numpy
+        self.__min_distance = numpy.full((num_vertices, num_vertices), numpy.inf)
+        self.__max_internal = numpy.full((num_vertices, num_vertices), numpy.NAN)
+        for i in range(0, num_vertices):
             # distances from a node to itself are zero
-            self.__minDistance[i][i] = 0
+            self.__min_distance[i][i] = 0
             # an empty path has no internal node
-            self.__maxInternal[i][i] = -1
+            self.__max_internal[i][i] = -1
         # update distances for single-edge paths that don't contain internal nodes
         for _edge in edges:
             i, j, weight = _edge
-            self.__minDistance[i][j] = weight
+            self.__min_distance[i][j] = weight
             # a single-edge path has no internal node
-            self.__maxInternal[i][j] = -1
+            self.__max_internal[i][j] = -1
 
-        self.__capInternal = -1
-        self.__numVertices = numVertices
-        self.__negativeCycle = False
+        self.__cap_internal = -1
+        self.__num_vertices = num_vertices
+        self.__negative_cycle = False
 
-    def __bumpCapInternal(self, verbose=True):
+    def __bump_cap_internal(self, verbose=True):
         '''
         Allow one more node to be used as internal nodes in a path.
         Recompute the shortest distances and max internal nodes accordingly.
         '''
         # if all nodes are already allowed or if a negative cycle has been detected, halt and return
-        if self.__capInternal >= self.__numVertices - 1 or self.__negativeCycle:
+        if self.__cap_internal >= self.__num_vertices - 1 or self.__negative_cycle:
             return
-        else:
-            if verbose:
-                print("Now running {0} out of {1} iterations.. ".format(self.__capInternal+2, self.__numVertices), end="\r")
-            self.__capInternal += 1
-            self.__updateDistances()
+        if verbose:
+            print("Now running {0} out of {1} iterations.. ".format(self.__cap_internal+2, self.__num_vertices), end="\r")
+        self.__cap_internal += 1
+        self.__update_distances()
 
-    def __updateDistances(self):
+    def __update_distances(self):
         '''
-        Subroutine used in a single iteration to update all the pairwise shortest distances after bumpCapInternal() allows another internal node.
+        Subroutine used in a single iteration to update all the pairwise shortest distances after bump_cap_internal() allows another internal node.
         '''
-        for i in range(0, self.__numVertices):
-            for j in range(0, self.__numVertices):
-                self.__updateSinglePair(i, j)
+        for i in range(0, self.__num_vertices):
+            for j in range(0, self.__num_vertices):
+                self.__update_single_pair(i, j)
 
-    def __updateSinglePair(self, i, j):
+    def __update_single_pair(self, i, j):
         '''
         Subroutine to update the shortest disance, and the max-index internal node associated, from node i and node j.
         '''
-        updateValue = self.__minDistance[i][self.__capInternal] + self.__minDistance[self.__capInternal][j]
-        # distance updates can be done in-place because all values used to compute updateValue sit in the union of a row and a column that never get themselves updated in this iteration. This saves one copy of self.__minDistance from memory.
-        if updateValue < self.__minDistance[i][j]:
+        update_value = self.__min_distance[i][self.__cap_internal] + self.__min_distance[self.__cap_internal][j]
+        # distance updates can be done in-place because all values used to compute update_value sit in the union of a row and a column that never get themselves updated in this iteration. This saves one copy of self.__min_distance from memory.
+        if update_value < self.__min_distance[i][j]:
             # there is a negative cycle if and only if node i has a negative path to itself
             if i == j:
                 # sanity check that the cycle length is indeed negative; assertion error indicates a bug in the initialization of distances
-                assert updateValue < 0
-                self.__negativeCycle = True
+                assert update_value < 0
+                self.__negative_cycle = True
                 return
-            self.__minDistance[i][j] = updateValue
-            self.__maxInternal[i][j] = self.__capInternal
+            self.__min_distance[i][j] = update_value
+            self.__max_internal[i][j] = self.__cap_internal
 
-    def getDistances(self):
+    def get_distances(self):
         '''
         Launch the algorithm to compute shortest distances and paths.
         '''
-        for iteration in range(self.__capInternal, self.__numVertices-1):
-            self.__bumpCapInternal()
-        if self.__negativeCycle:
+        for _i in range(self.__cap_internal, self.__num_vertices-1):
+            self.__bump_cap_internal()
+        if self.__negative_cycle:
             raise ValueError("The graph contains a negative cycle.")
-        return self.__minDistance
+        return self.__min_distance
 
-    def getPath(self, source, destination):
+    def get_path(self, source, destination):
         '''
         Backtrack and compute the shortest path from the source node to the destination node.
         If a path does exist, the running time is linear to the number of hops between source and destination.
         '''
+        import numpy
         # base case: destination unreachable from source
-        if numpy.isinf(self.__minDistance[source][destination]):
-            assert numpy.isnan(self.__maxInternal[source][destination])
+        if numpy.isinf(self.__min_distance[source][destination]):
+            assert numpy.isnan(self.__max_internal[source][destination])
             return []
         # base case: destination is the same as source
         if source == destination:
             return [source]
 
-        internalNode = int(self.__maxInternal[source][destination])
+        internal_node = int(self.__max_internal[source][destination])
         # base case: destination is one hop from source
-        if internalNode < 0:
+        if internal_node < 0:
             return [source, destination]
         # common case: internal node found, start recursive call
-        if internalNode >= 0:
-            return self.getPath(source, internalNode)[:-1] + self.getPath(internalNode, destination)
-        
+        if internal_node >= 0:
+            return self.get_path(source, internal_node)[:-1] + self.get_path(internal_node, destination)
+        return ValueError("Expected one of the previous if statements to be true.")

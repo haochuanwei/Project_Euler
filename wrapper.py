@@ -1,5 +1,13 @@
+'''
+Decorators to provide bind common utilities to functions.
+'''
+
 import time
+
 def timeit(method):
+    """
+    Timing decorator.
+    """
     def timed(*args, **kw):
         tic = time.time()
         result = method(*args, **kw)
