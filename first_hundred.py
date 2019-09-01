@@ -2442,6 +2442,31 @@ def euler_problem_72(bound=10**6):
     return count
 
 @timeit
+def euler_problem_80(bound=100, keep_digits=100):
+    '''
+    It is well known that if the square root of a natural number is not an integer, then it is irrational. The decimal expansion of such square roots is infinite without any repeating pattern at all.
+    The square root of two is 1.41421356237309504880..., and the digital sum of the first one hundred decimal digits is 475.
+    For the first one hundred natural numbers, find the total of the digital sums of the first one hundred decimal digits for all the irrational square roots.
+    '''
+    # idea: one could get to 100 digits easily with binary search.
+    # here however... just use decimal.
+    from decimal import Decimal, getcontext
+    from math import log
+
+    # make sure that the decimals have enough significant digits
+    getcontext().prec = 5 + keep_digits + int(log(bound, 10))
+
+    def solve():
+        total_sum = 0
+        for num in range(1, bound+1):
+            decimal_sqrt = Decimal(num).sqrt()
+            if decimal_sqrt != int(decimal_sqrt):
+                digits_that_count = str(decimal_sqrt).replace('.', '')[:keep_digits]
+                total_sum += sum(list(map(int, list(digits_that_count))))
+        return total_sum
+    return solve()
+
+@timeit
 def euler_problem_81():
     '''
     The equations don't show very well in text editors. Go to:
