@@ -858,7 +858,7 @@ def dijkstra(adjacency_dist_list, i):
     adjacency_dist_list - adjacency list where adjacency_dist_list[i] is a list of (neighbor, distance) tuples.
     i - the source index to compute the distance from.
     '''
-    from datastruct import Heap
+    from library.datastruct import Heap
     # determine the number of nodes
     num_vertices = len(adjacency_dist_list)
     # initialize a list of distances
