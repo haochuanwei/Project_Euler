@@ -11,6 +11,7 @@ def get_attachment_path(problem_number):
                             54: 'p054_poker.txt',
                             59: 'p059_cipher.txt',
                             67: 'p067_triangle.txt',
+                            79: 'p079_keylog.txt',
                             81: 'p081_matrix.txt',
                             82: 'p082_matrix.txt',
                             83: 'p083_matrix.txt',
