@@ -2472,6 +2472,40 @@ def euler_problem_73(bound=12000):
     return count
 
 @wrappy.probe()
+def euler_problem_76(n=100):
+    '''
+    It is possible to write five as a sum in exactly six different ways:
+    4 + 1
+    3 + 2
+    3 + 1 + 1
+    2 + 2 + 1
+    2 + 1 + 1 + 1
+    1 + 1 + 1 + 1 + 1
+    How many different ways can one hundred be written as a sum of at least two positive integers?
+    '''
+    # idea: use dynamic programming.
+    from subroutines import num_desc_seq_given_total_and_head as subproblem
+    total = 0
+    for _head in range(1, n):
+        total += subproblem(n, _head)
+
+    return total
+
+@wrappy.todo()
+def euler_problem_78(n=1000000):
+    '''
+    Let p(n) represent the number of different ways in which n coins can be separated into piles. For example, five coins can be separated into piles in exactly seven different ways, so p(5)=7.
+    OOOOO
+    OOOO   O
+    OOO   OO
+    OOO   O   O
+    OO   OO   O
+    OO   O   O   O
+    O   O   O   O   O
+    Find the least value of n for which p(n) is divisible by one million.
+    '''
+
+@wrappy.probe()
 def euler_problem_79():
     '''
     A common security method used for online banking is to ask the user for three random characters from a passcode. For example, if the passcode was 531278, they may ask for the 2nd, 3rd, and 5th characters; the expected reply would be: 317.
@@ -2671,4 +2705,4 @@ def euler_problem_83():
 
 
 if __name__ == '__main__':
-    print(euler_problem_79())
+    print(euler_problem_78(10000))
