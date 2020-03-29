@@ -2,6 +2,7 @@
 Subroutines that may get used repeatedly across different problems.
 '''
 # pylint: disable=line-too-long, bad-whitespace
+import wrappy
 
 def least_divisor(num, floor=2):
     '''
@@ -1038,3 +1039,26 @@ def DFS_TS(adjacency_list):
             while len(s) > 0:
                 current_label = DFS_TS_subroutine(adjacency_list, explored, current_label, labels, s)
     return labels
+
+@wrappy.memoize(cache_limit=100000)
+def num_desc_seq_given_total_and_head(total, head):
+    '''
+    Subproblem in dynamic programming.
+    Count the number of descending sequences given a total and the head.
+    Note that a one-term sequence is also considered a sequence.
+    '''
+    if total < 1 or head < 1:
+        return 0
+
+    # base case: sequence has only one term
+    if total == head:
+        return 1
+
+    # recursive case: sequence has more than one term
+    # the second term cannot exceed the head; take advantage of transitivity
+    num_seq = 0
+    for _second in range(1, head+1):
+        num_seq += num_desc_seq_given_total_and_head(total-head, _second)
+    
+    return num_seq
+
