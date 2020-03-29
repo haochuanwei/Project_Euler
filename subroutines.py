@@ -988,3 +988,53 @@ class FloydWarshall():
         if internal_node >= 0:
             return self.get_path(source, internal_node)[:-1] + self.get_path(internal_node, destination)
         return ValueError("Expected one of the previous if statements to be true.")
+
+def DFS_TS_subroutine(adjacency_list, explored, current_label, labels, s):
+    '''
+    Non-recursive subroutine called by DFS_TS.
+    Args:
+    adjacency_list - the graph in its adjacency list representation.
+    explored - whether each node has been explored.
+    current_label - the next label to be assigned.
+    labels - the list holding the labels of each node.
+    s - stack to assist this subroutine.
+    '''
+    # mark node i as explored
+    i = s[-1]
+    explored[i] = 1
+    exhausted = True
+    for j in adjacency_list[i]:
+        # stack each neighbor that has not yet been explored
+        if not bool(explored[j]):
+            exhausted = False
+            s.append(j)
+    if exhausted:
+        s.pop()
+        # assign label and decrement it
+        if not labels[i] >= 0:
+            labels[i] = current_label
+            current_label -= 1
+    return current_label
+
+def DFS_TS(adjacency_list):
+    '''
+    Depth-first search of an adjacency list to compute a topological ordering.
+    The topological labels will range from 0 to n-1.
+    '''
+    # determine the number of nodes
+    n = len(adjacency_list)
+    # initialize explored statuses
+    explored = [0] * n
+    # initialize the topological ordering to be returned
+    labels = [-1] * n
+    # initialize the next label to be assigned
+    current_label = n-1
+    # loop over all nodes
+    for i in range(0, n):
+        s = []
+        # call the subroutine on nodes that have not yet been explored
+        if not bool(explored[i]):
+            s.append(i)
+            while len(s) > 0:
+                current_label = DFS_TS_subroutine(adjacency_list, explored, current_label, labels, s)
+    return labels

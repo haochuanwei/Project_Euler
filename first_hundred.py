@@ -2472,6 +2472,47 @@ def euler_problem_73(bound=12000):
     return count
 
 @wrappy.probe()
+def euler_problem_79():
+    '''
+    A common security method used for online banking is to ask the user for three random characters from a passcode. For example, if the passcode was 531278, they may ask for the 2nd, 3rd, and 5th characters; the expected reply would be: 317.
+    The text file, keylog.txt, contains fifty successful login attempts.
+    Given that the three characters are always asked for in order, analyse the file so as to determine the shortest possible secret passcode of unknown length.
+    '''
+    # idea: successful logins describe the order of digits.
+    # see this as a directed graph problem where each edge describes a 'preceeds' relationship.
+    # if there are no repeated digits, then the graph should be acyclic.
+    # topological sort gives the final answer.
+    from custom_config import get_attachment_path
+    from subroutines import DFS_TS 
+    from collections import defaultdict
+
+    # keep track of graph edges and which nodes must be present
+    from_to = defaultdict(set)
+    seen_digits = set()
+    with open(get_attachment_path(79), 'r') as f:
+        logins = f.read().split('\n')
+        logins = [_s for _s in logins if _s]
+        for _login in logins:
+            first, second, third = int(_login[0]), int(_login[1]), int(_login[2])
+            from_to[first].add(second)
+            from_to[first].add(third)
+            from_to[second].add(third)
+            seen_digits.add(first)
+            seen_digits.add(second)
+            seen_digits.add(third)
+
+    # build adjacency list
+    adjacency_list = [[]] * 10
+    for _from, _to_set in from_to.items():
+        _neighbors = sorted(list(_to_set))
+        adjacency_list[_from] = _neighbors
+
+    # run topological sort on digits that must be present
+    labels = DFS_TS(adjacency_list)
+    ordered_digits = sorted(list(seen_digits), key=lambda d: labels[d])
+    return ordered_digits
+
+@wrappy.probe()
 def euler_problem_80(bound=100, keep_digits=100):
     '''
     It is well known that if the square root of a natural number is not an integer, then it is irrational. The decimal expansion of such square roots is infinite without any repeating pattern at all.
@@ -2630,4 +2671,4 @@ def euler_problem_83():
 
 
 if __name__ == '__main__':
-    print(euler_problem_73(8))
+    print(euler_problem_79())
