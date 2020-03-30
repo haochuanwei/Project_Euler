@@ -2491,6 +2491,40 @@ def euler_problem_76(n=100):
 
     return total
 
+@wrappy.probe()
+def euler_problem_77(thresh=5000, bound=10000):
+    '''
+    It is possible to write ten as the sum of primes in exactly five different ways:
+    7 + 3
+    5 + 5
+    5 + 3 + 2
+    3 + 3 + 2 + 2
+    2 + 2 + 2 + 2 + 2
+    What is the first value which can be written as the sum of primes in over five thousand different ways?
+    '''
+    # idea: use dynamic programming.
+    from subroutines import (
+        num_desc_prime_seq_given_total_and_head as subproblem,
+        all_primes_under
+    )
+    
+    list_of_primes = all_primes_under(bound)
+    set_of_primes = set(list_of_primes)
+    
+    # search for the solution within specified bound
+    for candidate_sum in range(bound):
+        num_seq = 0
+        # enumerate all possible leading terms
+        for _head in list_of_primes:
+            if _head > candidate_sum:
+                break
+            else:
+                num_seq += subproblem(candidate_sum, _head, list_of_primes, set_of_primes)
+        if num_seq > thresh:
+            return candidate_sum
+        
+    return None
+
 @wrappy.todo()
 def euler_problem_78(n=1000000):
     '''
@@ -2705,4 +2739,4 @@ def euler_problem_83():
 
 
 if __name__ == '__main__':
-    print(euler_problem_78(10000))
+    print(euler_problem_77(50000, 10000))
