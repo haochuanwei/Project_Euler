@@ -1062,3 +1062,29 @@ def num_desc_seq_given_total_and_head(total, head):
     
     return num_seq
 
+@wrappy.memoize(cache_limit=100000)
+def num_desc_prime_seq_given_total_and_head(total, head, list_of_primes, set_of_primes):
+    '''
+    Subproblem in dynamic programming.
+    Using a pre-computed list & set of primes, count the number of descending prime sequences given a total and the head.
+    Note that a one-term sequence is also considered a sequence.
+    '''
+    # sanity check
+    assert head in set_of_primes, f"total: {total}, head: {head}"
+    assert total >= head, f"total: {total}, head: {head}"
+    
+    # base case: sequence has only one term
+    if total == head:
+        return 1
+
+    # recursive case: sequence has more than one term
+    # the second term cannot exceed the head; take advantage of transitivity
+    num_seq = 0
+    for _second in list_of_primes:
+        if _second > head or _second > total - head:
+            break
+        else:
+            num_seq += num_desc_prime_seq_given_total_and_head(total-head, _second, list_of_primes, set_of_primes)
+    
+    return num_seq
+
