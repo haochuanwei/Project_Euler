@@ -1088,3 +1088,33 @@ def num_desc_prime_seq_given_total_and_head(total, head, list_of_primes, set_of_
     
     return num_seq
 
+def pythagorean_triplets(bound):
+    '''
+    Generates coprime Pythagorean triplets where the greatest of the triplet is under some bound.
+    '''
+    from math import sqrt, ceil
+    fac = Factorizer(bound)
+    bound_for_iteration = ceil(sqrt(bound))
+    triplets = []
+    # use the formula: (m^2 - n^2)^2 + (2mn)^2 = (m^2 + n^2)^2
+    for _m in range(2, bound_for_iteration):
+        for _n in range(1, _m):
+            # calculate Pythagorean triplet
+            term_a = _m ** 2 - _n ** 2
+            term_b = 2 * _m * _n
+            term_c = _m ** 2 + _n ** 2
+            
+            # skip triplets that are not coprime
+            a_factors = fac.factorize(term_a)
+            coprime = True
+            for _factor in a_factors:
+                if term_b % _factor == 0:
+                    coprime = False
+                    break
+            if not coprime:
+                continue
+
+            if term_c <= bound:
+                _triplet = tuple(sorted([term_a, term_b, term_c]))
+                triplets.append(_triplet)
+    return triplets
