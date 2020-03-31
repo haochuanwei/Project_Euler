@@ -2472,6 +2472,44 @@ def euler_problem_73(bound=12000):
     return count
 
 @wrappy.probe()
+def euler_problem_75(bound=1500000):
+    '''
+    It turns out that 12 cm is the smallest length of wire that can be bent to form an integer sided right angle triangle in exactly one way, but there are many more examples.
+    12 cm: (3,4,5)
+    24 cm: (6,8,10)
+    30 cm: (5,12,13)
+    36 cm: (9,12,15)
+    40 cm: (8,15,17)
+    48 cm: (12,16,20)
+    In contrast, some lengths of wire, like 20 cm, cannot be bent to form an integer sided right angle triangle, and other lengths allow more than one solution to be found; for example, using 120 cm it is possible to form exactly three different integer sided right angle triangles.
+    120 cm: (30,40,50), (20,48,52), (24,45,51)
+    Given that L is the length of the wire, for how many values of L ≤ 1,500,000 can exactly one integer sided right angle triangle be formed?
+    '''
+    from subroutines import pythagorean_triplets
+    from collections import defaultdict
+
+    # the greatest term in the triplet is up to half the bound L.
+    coprime_triplets = pythagorean_triplets(bound // 2)
+    
+    # use a defaultdict to hold counts of different combinations for each L
+    combo_lookup = defaultdict(int)
+
+    # iterate through all triplets and their multiples
+    for _a, _b, _c in coprime_triplets:
+        _atomic_sum = _a + _b + _c
+        _coeff = 1
+        _sum = _coeff * _atomic_sum
+        while _sum <= bound:
+            combo_lookup[_sum] += 1
+            _coeff += 1
+            _sum = _coeff * _atomic_sum
+
+    # check the number of combinations
+    qualified_lengths = [_key for _key, _value in combo_lookup.items() if _value == 1]
+
+    return qualified_lengths, len(qualified_lengths)
+
+@wrappy.probe()
 def euler_problem_76(n=100):
     '''
     It is possible to write five as a sum in exactly six different ways:
@@ -2739,4 +2777,4 @@ def euler_problem_83():
 
 
 if __name__ == '__main__':
-    print(euler_problem_77(50000, 10000))
+    print(euler_problem_75())
