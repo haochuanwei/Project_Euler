@@ -2472,6 +2472,78 @@ def euler_problem_73(bound=12000):
     return count
 
 @wrappy.probe()
+def euler_problem_74(bound=1000000, target_length=60):
+    '''
+    The number 145 is well known for the property that the sum of the factorial of its digits is equal to 145:
+    1! + 4! + 5! = 1 + 24 + 120 = 145
+    Perhaps less well known is 169, in that it produces the longest chain of numbers that link back to 169; it turns out that there are only three such loops that exist:
+    169 → 363601 → 1454 → 169
+    871 → 45361 → 871
+    872 → 45362 → 872
+    It is not difficult to prove that EVERY starting number will eventually get stuck in a loop. For example,
+    69 → 363600 → 1454 → 169 → 363601 (→ 1454)
+    78 → 45360 → 871 → 45361 (→ 871)
+    540 → 145 (→ 145)
+    Starting with 69 produces a chain of five non-repeating terms, but the longest non-repeating chain with a starting number below one million is sixty terms.
+    How many chains, with a starting number below one million, contain exactly sixty non-repeating terms?
+    '''
+    # idea: the for any number p, the next number can be pre-computed for fast lookup
+    from subroutines import factorial
+    # idea: we want both lookup and ordering when computing the chain
+    from collections import OrderedDict
+
+    @wrappy.memoize(cache_limit=bound*2)
+    def transform(num):
+        digits = [int(_d) for _d in list(str(num))]
+        return sum([factorial(_d) for _d in digits])
+
+    # we can also cache the chain length for any number already computed.
+    # this however is not as clean as using a decorator.
+
+    # cache what we already know
+    # note that ALL other numbers are not in a loop (except maybe self-loops)
+    chain_length_cache = {169: 3, 363601: 3, 1454: 3, 871: 2, 45361: 2, 872: 2, 45362: 2}
+
+    def chain_length(num):
+        '''
+        Calculate the chain length starting from num.
+        '''
+        # easy case: precomputed
+        if num in chain_length_cache:
+            return chain_length_cache[num]
+
+        # common case: use a list to keep track of numbers that have shown up
+        # and to store corrections to their respective chain lengths
+        current = num
+        prev = -1
+        seen = []
+        while not current in chain_length_cache and not prev == current:
+            seen.append(current)
+            prev = current
+            current = transform(current)
+        # note that 'current' is now a number whose chain length we know
+        if current in chain_length_cache:
+            cached_length = chain_length_cache[current]
+        else:
+            assert prev == current
+            cached_length = 0
+
+        # all seen terms get their chain lengths based on their index
+        for i, _term in enumerate(seen):
+            chain_length_cache[_term] = len(seen) - i + cached_length
+
+        return chain_length_cache[num]
+
+    # loop through all possible candidates
+    qualified = []
+    for candidate in range(1, bound):
+        length = chain_length(candidate)
+        if length == target_length:
+            qualified.append(candidate)
+
+    return qualified, len(qualified)
+
+@wrappy.probe()
 def euler_problem_75(bound=1500000):
     '''
     It turns out that 12 cm is the smallest length of wire that can be bent to form an integer sided right angle triangle in exactly one way, but there are many more examples.
@@ -2777,4 +2849,4 @@ def euler_problem_83():
 
 
 if __name__ == '__main__':
-    print(euler_problem_75())
+    print(euler_problem_74())
