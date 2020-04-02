@@ -2847,6 +2847,56 @@ def euler_problem_83():
 
     return solve()
 
+@wrappy.probe()
+def euler_problem_85(target=2000000):
+    '''
+    The description doesn't show very well in text editors. Go to:
+    https://projecteuler.net/problem=85
+    for the original problem description.
+    '''
+    # idea: sliding window
+    def num_rectangles_given_size(h_outer, v_outer, h_inner, v_inner):
+        '''
+        Get the number of inner rectangles given the inner and outer dimensions.
+        '''
+        hori_count = h_outer - h_inner + 1
+        vert_count = v_outer - v_inner + 1
+        return hori_count * vert_count
+
+    def num_rectangles(h_outer, v_outer):
+        count = 0
+        for h_inner in range(1, h_outer+1):
+            for v_inner in range(1, v_outer+1):
+                count += num_rectangles_given_size(h_outer, v_outer, h_inner, v_inner)
+        return count
+
+    # initialize the final answer
+    min_diff = -1
+    best_area = 0
+    best_shape = {0, 0}
+
+    # without loss of generality, assume the outer rectangle has greater size horizontally than vertically; keep incrementing until going beyond the target
+    h_length = 1
+    terminate = False
+    while True:
+        v_length = 1
+        while v_length < h_length:
+            num_rec = num_rectangles(h_length, v_length)
+            diff = abs(num_rec - target)
+            if diff < min_diff or min_diff < 0:
+                min_diff = diff
+                best_area = h_length * v_length
+                best_shape = (h_length, v_length)
+            if num_rec > target:
+                if v_length == 1:
+                    terminate = True
+                break
+            v_length += 1
+        if terminate:
+            break
+        h_length += 1
+
+    return min_diff, best_area, best_shape
 
 if __name__ == '__main__':
-    print(euler_problem_74())
+    print(euler_problem_85())
