@@ -3226,11 +3226,16 @@ def euler_problem_85(target=2000000):
         while v_length < h_length:
             num_rec = num_rectangles(h_length, v_length)
             diff = abs(num_rec - target)
+
+            # update best solution so far
             if diff < min_diff or min_diff < 0:
                 min_diff = diff
                 best_area = h_length * v_length
                 best_shape = (h_length, v_length)
+
+            # end v-loop when above target
             if num_rec > target:
+                # end h-loop when above target with v=1
                 if v_length == 1:
                     terminate = True
                 break
