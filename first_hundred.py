@@ -3246,6 +3246,89 @@ def euler_problem_85(target=2000000):
 
     return min_diff, best_area, best_shape
 
-
+@wrappy.probe()
+def euler_problem_86(target=1000000, bound=10000):
+    """
+    The description doesn't show very well in text editors. Go to:
+    https://projecteuler.net/problem=86
+    for the original problem description.
+    """
+    # idea: without loss of generality, suppose we have a cuboid with dimensions (a, b, c) where a <= b <= c.
+    # This is really a 2-D problem if we fold the (exactly 2) faces that the shortest path goes through.
+    # The shortest distance, d, always satisfied that d^2 = (a + b)^2 + c^2.
+    # -> this is just Pythagorean with a+b being anything between 2 and 2c.
+    # -> d is at most sqrt(5) * c.
+    
+    from subroutines import pythagorean_triplets
+    # compute all triplets under some bound
+    triplets = pythagorean_triplets(3 * bound)
+    # sort triplets for convience later
+    triplets = sorted(triplets, key=lambda t: t[0])
+    
+    def triplet_to_num_combinations(low, mid, high, thresh):
+        '''
+        Given a triplet, determine the number of possible (a, b, c) combinations where c is bounded by a threshold.
+        '''
+        assert low ** 2 + mid ** 2 == high ** 2
+        # if mid > 2 * low, then mid must be c; split low between a and b with a <= b; e.g. for low=7, mid=24, high=25, c=24 and a can be 1, 2, or 3
+        if mid > 2 * low:
+            return (low // 2) if mid <= thresh else 0
+        else:
+            count = 0
+            # case where c=mid: split low between a and b with a <= b
+            count += (low // 2) if mid <= thresh else 0
+            # case where c=low: b goes from (mid+1) // 2 to low, inclusively
+            count += (low - (mid + 1) // 2 + 1) if low <= thresh else 0
+            return count
+    
+    def num_valid_combinations(thresh):
+        '''
+        Subroutine for binary search.
+        '''
+        count = 0
+        for _triplet in triplets:
+            # consider each triplet and its multiples
+            _low, _mid, _high = _triplet
+            # terminate if c is definitely above the threshold
+            # note that triplets are sorted by _low, so we terminate the loop
+            if _low > thresh:
+                break
+            _coeff = 1
+            while True:
+                _l, _m, _h = _low * _coeff, _mid * _coeff, _high * _coeff
+                num_combinations = triplet_to_num_combinations(_l, _m, _h, thresh)
+                # stop trying more multiples if no contribution found
+                if num_combinations == 0:
+                    break
+                else:
+                    count += num_combinations
+                    _coeff += 1
+        return count
+    
+    def binary_search(lower, upper):
+        '''
+        Binary search solution.
+        '''
+        # base case: search window is small enough
+        if upper - lower <= 1:
+            print(num_valid_combinations(upper))
+            print(num_valid_combinations(lower))
+            return upper
+        
+        # sanity check
+        assert num_valid_combinations(lower) < target
+        assert num_valid_combinations(upper) > target
+        
+        middle = (upper + lower) // 2
+        pivot = num_valid_combinations(middle)
+        if pivot > target:
+            return binary_search(lower, middle)
+        elif pivot == target:
+            return middle
+        else:
+            return binary_search(middle, upper)
+        
+    return binary_search(1, bound)
+        
 if __name__ == "__main__":
-    print(euler_problem_85())
+    print(euler_problem_86(1000000))
