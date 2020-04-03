@@ -1,3 +1,4 @@
+# encoding: utf-8
 """
 Solutions to the first hundred problems of Project Euler.
 """
