@@ -3330,6 +3330,54 @@ def euler_problem_86(target=1000000, bound=10000):
             return binary_search(middle, upper)
         
     return binary_search(1, bound)
-        
+
+@wrappy.probe()
+def euler_problem_87(bound=int(5e7)):
+    '''
+    The smallest number expressible as the sum of a prime square, prime cube, and prime fourth power is 28. In fact, there are exactly four numbers below fifty that can be expressed in such a way:
+    28 = 2^2 + 2^3 + 2^4
+    33 = 3^2 + 2^3 + 2^4
+    49 = 5^2 + 2^3 + 2^4
+    47 = 2^2 + 3^3 + 2^4
+    How many numbers below fifty million can be expressed as the sum of a prime square, prime cube, and prime fourth power?
+    '''
+    # idea: we need to consider only the prime numbers below the square, cubic, and quadruple order roots of the bound; looping over all the possibilities takes O(n^(1/2 + 1/3 + 1/4)) = O(n^(13/12))
+
+    from subroutines import all_primes_under
+    from math import ceil
+
+    # precompute all the primes in the desired range
+    limit_square = ceil(bound ** (1/2))
+    limit_cubic = ceil(bound ** (1/3))
+    limit_quadruple = ceil(bound ** (1/4))
+
+    primes_square = all_primes_under(limit_square)
+    primes_cubic = [_p for _p in primes_square if _p < limit_cubic]
+    primes_quadruple = [_p for _p in primes_square if _p < limit_quadruple]
+
+    qualified = set()
+    # take advantage that the lists of primes are in ascending order
+    for _p_sq in primes_square:
+        _square = _p_sq ** 2
+
+        for _p_cu in primes_cubic:
+            _cubic = _p_cu ** 3
+
+            # early stopping
+            if _square + _cubic >= bound:
+                break
+
+            for _p_qu in primes_quadruple:
+                _quadruple = _p_qu ** 4
+
+                num = _square + _cubic + _quadruple
+                if num < bound:
+                    qualified.add(num)
+                else:
+                    # early stopping
+                    break
+    
+    return len(qualified)
+
 if __name__ == "__main__":
-    print(euler_problem_86(1000000))
+    print(euler_problem_87())
