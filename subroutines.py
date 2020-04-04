@@ -277,7 +277,7 @@ def all_primes_under(bound):
         cache.append(num)
         return True
 
-    # first use a list for keeping primes in ascending order
+    # use a list for keeping primes in ascending order
     cache_primes = []
     for candidate in range(2, bound):
         is_prime_with_cache(candidate, cache_primes)
