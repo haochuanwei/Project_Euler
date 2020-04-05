@@ -3379,6 +3379,7 @@ def euler_problem_87(bound=int(5e7)):
     
     return len(qualified)
 
+@wrappy.todo("The approach is incorrect in the iterative approach to find next the k'. One might need to consider swapping factors, which is much more complicated.")
 @wrappy.probe()
 def euler_problem_88(bound=12000):
     '''
@@ -3395,5 +3396,145 @@ def euler_problem_88(bound=12000):
     What is the sum of all the minimal product-sum numbers for 2≤k≤12000?
     '''
 
+    from subroutines import least_divisor, has_nontrivial_divisor, Factorizer
+    # the greatest possible minimal product-sum for k cannot exceed 2 * k
+    fac = Factorizer(2 * bound + 1)
+    
+    class Solution(object):
+        '''
+        Data structure specifically for this problem.
+        Components:
+        - traditional factorization
+        - all the product-sum factorizations 
+        '''
+        def __init__(self, num, cache):
+            '''
+            cache - stores Solution objects corresponding to solved numbers.
+            '''
+            divisor = least_divisor(num)
+            if divisor == num:
+                self.sequences = [(num)]
+            else:
+                quotient = num // divisor
+                sub_solution = cache[quotient]
+
+    class Sequence(object):
+        def __init__(self, factors):
+            '''
+            Create a product-sum sequence from non-1 factors.
+            '''
+            self.factors = factors
+            factors_sum = 0
+            product = 1
+            for _factor in self.factors:
+                product *= _factor
+                factors_sum += _factor
+            self.product = product
+            self.padding = product - factors_sum
+
+        def view(self):
+            '''
+            The product-sum representation.
+            '''
+            return [1] * self.padding + self.factors
+
+        def k(self):
+            '''
+            The number of terms in the product-sum representation.
+            '''
+            return self.padding + len(self.factors)
+
+        def __mul__(self, coeff):
+            '''
+            Multiply self by a coefficient and return.
+            Adjust padding according to the new product.
+            '''
+            factors = self.factors[:]
+            factors.append(coeff)
+            seq = Sequence(factors)
+            return seq
+
+    k_to_min_product = dict()
+    # start checking numbers from 4, the smallest composite
+    candidate = 4
+    # keep trying greater numbers until answers don't receive updates for a while
+    tolerance = 1000
+    flag_for_more_candidates = True
+    while flag_for_more_candidates:
+        # skip prime numbers
+        if not has_nontrivial_divisor(candidate):
+            candidate += 1
+            continue
+
+        seq = Sequence(candidate)
+        # keep finding greater k until it does not exist
+        flag_for_greater_k = True
+
+        while flag_for_greater_k:
+            _k = seq.k()
+            # stop if k is too large
+            if _k > bound:
+                break
+            # update solution for k if not previously found
+            if not _k in k_to_min_product:
+                k_to_min_product[_k] = candidate
+                most_recent_valid_candidate = candidate
+            flag_for_greater_k = seq.grow()
+        
+        candidate += 1
+        if  candidate - most_recent_valid_candidate > tolerance:
+            break
+
+    minimal_products = set([k_to_min_product[_key] for _key in range(2, bound+1)])
+    print(k_to_min_product)
+    print(minimal_products)
+    return sum(minimal_products)
+
+@wrappy.probe()
+def euler_problem_92(bound=int(1e+7)):
+    '''
+    A number chain is created by continuously adding the square of the digits in a number to form a new number until it has been seen before.
+    For example,
+    44 → 32 → 13 → 10 → 1 → 1
+    85 → 89 → 145 → 42 → 20 → 4 → 16 → 37 → 58 → 89
+    Therefore any chain that arrives at 1 or 89 will become stuck in an endless loop. What is most amazing is that EVERY starting number will eventually arrive at 1 or 89.
+    How many starting numbers below ten million will arrive at 89?
+    '''
+    from collections import defaultdict
+
+    @wrappy.memoize(cache_limit=bound)
+    def transform(num):
+        digits = [int(_d) for _d in str(num)]
+        return sum([_d ** 2 for _d in digits])
+
+    # use a cache for lookup
+    cache = {}
+
+    def num_to_loop_start(num, seen):
+        # base case: num itself is the loop start
+        if num in seen:
+            cache[num] = num
+            return num
+
+        # base case: loop start for num has been computed before
+        if num in cache:
+            return cache[num]
+
+        # common case: keep track of seen numbers and go on
+        seen.add(num)
+        next_in_line = transform(num)
+        loop_start = num_to_loop_start(next_in_line, seen)
+        cache[num] = loop_start
+        return loop_start
+
+    solution = defaultdict(int)
+    for num in range(1, bound):
+        if num % 500000 == 0:
+            print(num)
+        loop_start = num_to_loop_start(num, seen=set())
+        solution[loop_start] += 1
+
+    return solution
+
 if __name__ == "__main__":
-    print(euler_problem_87())
+    print(euler_problem_92())
