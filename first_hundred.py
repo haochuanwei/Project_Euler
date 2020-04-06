@@ -5,6 +5,7 @@ Solutions to the first hundred problems of Project Euler.
 # pylint: disable=line-too-long, bad-whitespace, invalid-name
 
 import wrappy
+from tqdm import tqdm
 
 
 @wrappy.probe()
@@ -3536,5 +3537,38 @@ def euler_problem_92(bound=int(1e+7)):
 
     return solution
 
+@wrappy.probe()
+def euler_problem_94(bound=int(1e+9)):
+    '''
+    It is easily proved that no equilateral triangle exists with integral length sides and integral area. However, the almost equilateral triangle 5-5-6 has an area of 12 square units.
+    We shall define an almost equilateral triangle to be a triangle for which two sides are equal and the third differs by no more than one unit.
+    Find the sum of the perimeters of all almost equilateral triangles with integral side lengths and area and whose perimeters do not exceed one billion (1,000,000,000).
+    '''
+    # idea: denote the sides as (a, a, b) where b = a+1 or a-1.
+    # According to Heron's Formula, area = sqrt(p(p-a)(p-a)(p-b)) where p = a + b/2.
+    # i.e. area = sqrt((a + b/2)(b/2))(b/2)(a - b/2) = (b/2) * sqrt((a + b/2)(a - b/2))
+    # which can only be an integer is a is odd and b is even given that b = a+1 or a-1.
+    # Let b = 2c. a = 2c-1 or 2c+1. perimeter = 6c-2 or 6c+2.
+    # (a + b/2)(a - b/2) = (3c-1)(c-1) or (3c+1)(c+1) must be a square.
+
+    from math import sqrt
+    tolerance = 1e-16
+    # determine the possible range for iteration
+    bound_for_c = (bound + 2) // 6
+
+    total = 0
+    triangles = []
+    for c in tqdm(range(1, bound_for_c)):
+        for incre in [-1, 1]:
+            must_be_square = (3 * c + incre) * (c + incre)
+            must_be_int = sqrt(must_be_square)
+            if abs(must_be_int - round(must_be_int)) < tolerance:
+                perimeter = 6 * c + 2 * incre
+                total += perimeter
+                b = 2 * c
+                a = b + incre
+                triangles.append((a, a, b))
+    return triangles, total
+
 if __name__ == "__main__":
-    print(euler_problem_92())
+    print(euler_problem_94())
