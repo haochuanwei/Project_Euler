@@ -3544,30 +3544,31 @@ def euler_problem_94(bound=int(1e+9)):
     We shall define an almost equilateral triangle to be a triangle for which two sides are equal and the third differs by no more than one unit.
     Find the sum of the perimeters of all almost equilateral triangles with integral side lengths and area and whose perimeters do not exceed one billion (1,000,000,000).
     '''
-    # idea: denote the sides as (a, a, b) where b = a+1 or a-1.
-    # According to Heron's Formula, area = sqrt(p(p-a)(p-a)(p-b)) where p = a + b/2.
-    # i.e. area = sqrt((a + b/2)(b/2))(b/2)(a - b/2) = (b/2) * sqrt((a + b/2)(a - b/2))
-    # which can only be an integer is a is odd and b is even given that b = a+1 or a-1.
-    # Let b = 2c. a = 2c-1 or 2c+1. perimeter = 6c-2 or 6c+2.
-    # (a + b/2)(a - b/2) = (3c-1)(c-1) or (3c+1)(c+1) must be a square.
-
+    # idea: split the almost-equilateral into two right triangles.
+    # sides (a, b, c) in each right triangle where c is the hypotenuse and b is half a side of the almost-equilateral. 
+    # sides (c, c, 2b) in the almost-equilateral
+    # -> note that abs(c - 2b) = 1
+    # -> this also implies that c and b are coprime, because if there weren't, then abs(c - 2b) would be divisible by their common factor
+    # Hence we get two strong conditions:
+    # -> abs(c - 2b) = 1
+    # -> a, b, c must be coprime
+    
+    from subroutines import pythagorean_triplets
     from math import sqrt
-    tolerance = 1e-16
-    # determine the possible range for iteration
-    bound_for_c = (bound + 2) // 6
-
+    bound_for_c = (bound + 1) // 3
+    
+    # find all the triplets with specific ratio bounds
+    # although we know that the triplets are coprime, it is way faster to check abs(c - 2b) = 1 than co-primeness, so loosening that constraint saves time computing triplets 
+    triplets = pythagorean_triplets(bound_for_c + 1, 2-sqrt(3), 1/sqrt(3), coprime=False)
+   
     total = 0
     triangles = []
-    for c in tqdm(range(1, bound_for_c)):
-        for incre in [-1, 1]:
-            must_be_square = (3 * c + incre) * (c + incre)
-            must_be_int = sqrt(must_be_square)
-            if abs(must_be_int - round(must_be_int)) < tolerance:
-                perimeter = 6 * c + 2 * incre
-                total += perimeter
-                b = 2 * c
-                a = b + incre
-                triangles.append((a, a, b))
+    # b < a < c
+    for _b, _a, _c in triplets:
+        if abs(_c - 2 * _b) == 1:
+            perimeter = 2 * _c + 2 * _b
+            total += perimeter
+            triangles.append((_c, _c, 2 * _b))
     return triangles, total
 
 if __name__ == "__main__":
