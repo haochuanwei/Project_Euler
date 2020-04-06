@@ -3,6 +3,7 @@ Subroutines that may get used repeatedly across different problems.
 """
 # pylint: disable=line-too-long, bad-whitespace
 import wrappy
+from tqdm import tqdm
 
 
 def least_divisor(num, floor=2):
@@ -279,7 +280,8 @@ def all_primes_under(bound):
 
     # use a list for keeping primes in ascending order
     cache_primes = []
-    for candidate in range(2, bound):
+    print(f'Calculating primes under {bound}')
+    for candidate in tqdm(range(2, bound)):
         is_prime_with_cache(candidate, cache_primes)
     return cache_primes[:]
 
@@ -1223,32 +1225,36 @@ def num_desc_prime_seq_given_total_and_head(total, head, list_of_primes, set_of_
     return num_seq
 
 
-def pythagorean_triplets(bound):
+def pythagorean_triplets(bound, ratio_lower_bound=0.0, ratio_upper_bound=1.0, coprime=True):
     """
-    Generates coprime Pythagorean triplets where the greatest of the triplet is under some bound.
+    Generates coprime Pythagorean triplets where the greatest of the triplet is under some bound, and the generating (n, m) pairs are also optionally bounded.
     """
-    from math import sqrt, ceil
+    from math import sqrt, ceil, floor
 
-    fac = Factorizer(bound)
+    if coprime:
+        fac = Factorizer(bound)
     bound_for_iteration = ceil(sqrt(bound))
     triplets = []
     # use the formula: (m^2 - n^2)^2 + (2mn)^2 = (m^2 + n^2)^2
-    for _m in range(2, bound_for_iteration):
-        for _n in range(1, _m):
+    for _m in tqdm(range(2, bound_for_iteration)):
+        _n_upper = min(_m, ceil(ratio_upper_bound * _m))
+        _n_lower = max(1, floor(ratio_lower_bound * _m))
+        for _n in range(_n_lower, _n_upper):
             # calculate Pythagorean triplet
             term_a = _m ** 2 - _n ** 2
             term_b = 2 * _m * _n
             term_c = _m ** 2 + _n ** 2
-
-            # skip triplets that are not coprime
-            a_factors = fac.factorize(term_a)
-            coprime = True
-            for _factor in a_factors:
-                if term_b % _factor == 0:
-                    coprime = False
-                    break
-            if not coprime:
-                continue
+            
+            if coprime:
+                # skip triplets that are not coprime
+                a_factors = fac.factorize(term_a)
+                keep = True
+                for _factor in a_factors:
+                    if term_b % _factor == 0:
+                        keep = False
+                        break
+                if not keep:
+                    continue
 
             if term_c <= bound:
                 _triplet = tuple(sorted([term_a, term_b, term_c]))
