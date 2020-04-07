@@ -67,7 +67,9 @@ class Factorizer:  # pylint: disable=too-few-public-methods
         """
         Update the list and set of primes, up to some bound.
         """
-        self.list_primes = all_primes_under(self.bound)
+        from math import ceil, sqrt
+        # we only need primes up to sqrt(bound) because if none of those primes divide a number under bound, then bound must be prime
+        self.list_primes = all_primes_under(ceil(sqrt(self.bound)))
         self.set_primes = set(self.list_primes)
 
     def _least_divisor(self, num):
@@ -78,11 +80,14 @@ class Factorizer:  # pylint: disable=too-few-public-methods
         for _p in self.list_primes:
             if num % _p == 0:
                 return _p
-        raise ValueError(
-            "Unexpected behavior: {0} is not divisible by any number from {1}".format(
-                num, self.list_primes
-            )
-        )
+        # if none of the primes divide num, then num is a prime
+        return num
+    # to be deprecated ------
+        #raise ValueError(
+        #    "Unexpected behavior: {0} is not divisible by any number from {1}".format(
+        #        num, self.list_primes
+        #    )
+        #)
 
     def factorize(self, num):
         """
@@ -1173,6 +1178,71 @@ def DFS_TS(adjacency_list):
     return labels
 
 
+def reverse_adj_list(adjacency_list):
+    '''
+    Reverse an adjacency list.
+    This is only relevant for directed graphs. For undirected graphs, the reverse is just the same as the original.
+    '''
+    # determine the number of vertices
+    n = len(adjacency_list)
+    # initialzie the adjacency list to be returned
+    retlist = []
+    for i in range(0, n):
+        retlist.append([])
+    # loop over all nodes
+    for i, l in enumerate(adjacency_list):
+        # create an edge from node j to node i
+        for j in l:
+            retlist[j].append(i)
+    return retlist
+
+
+def DFS_SCC_subroutine(adjacency_list, explored, comp, s):
+    '''
+    Subroutine called by DFS_SCC() to determine strongly connected components from node i.
+    Designed to be non-recursive so that large graphs don't crash the stack.
+    '''
+    i = s.pop()
+    if not bool(explored[i]):
+        # mark node as explored
+        explored[i] = 1
+        # add node to the strongly connected component
+        comp.append(i)
+    # loop over neighbors and recursively call subroutine if not yet visited
+    for j in adjacency_list[i]:
+        if not bool(explored[j]):
+            s.append(j)
+
+def DFS_SCC(adjacency_list):
+    '''
+    Compute the strongly connected components of a graph.
+    This implements Kosaraju's two-pass DFS algorithm.
+    Designed to be non-recursive so that large graphs don't crash the stack.
+    '''
+    # determine the number of nodes
+    n = len(adjacency_list)
+    # compute the reversed graph
+    adj_rev = reverse_adj_list(adjacency_list)
+    # sort the nodes based on their label produced from the reversed graph
+    rev_labels = list(zip(range(0, n), DFS_TS(adj_rev)))
+    ordering = [r[0] for r in sorted(rev_labels, key=lambda x: x[1])]
+    # initialize explored statuses
+    explored = [0] * n
+    # initialize the list of strongly connected components
+    components = []
+    # loop over all nodes in the specifically determined order
+    for i in ordering:
+        # if not already explored, compute the SCC associated with the node
+        if not bool(explored[i]):
+            comp = []
+            s = [i]
+            while len(s) > 0:
+                DFS_SCC_subroutine(adjacency_list, explored, comp, s)
+            # add SCC to the list
+            components.append(comp)
+    return components
+
+
 @wrappy.memoize(cache_limit=100000)
 def num_desc_seq_given_total_and_head(total, head):
     """
@@ -1260,3 +1330,5 @@ def pythagorean_triplets(bound, ratio_lower_bound=0.0, ratio_upper_bound=1.0, co
                 _triplet = tuple(sorted([term_a, term_b, term_c]))
                 triplets.append(_triplet)
     return triplets
+
+
