@@ -3571,5 +3571,39 @@ def euler_problem_94(bound=int(1e+9)):
             triangles.append((_c, _c, 2 * _b))
     return triangles, total
 
+@wrappy.probe()
+def euler_problem_95(bound=round(1e+6)):
+    '''
+    The proper divisors of a number are all the divisors excluding the number itself. For example, the proper divisors of 28 are 1, 2, 4, 7, and 14. As the sum of these divisors is equal to 28, we call it a perfect number.
+    Interestingly the sum of the proper divisors of 220 is 284 and the sum of the proper divisors of 284 is 220, forming a chain of two numbers. For this reason, 220 and 284 are called an amicable pair.
+    Perhaps less well known are longer chains. For example, starting with 12496, we form a chain of five numbers:
+    12496 → 14288 → 15472 → 14536 → 14264 (→ 12496 → ...)
+    Since this chain returns to its starting point, it is called an amicable chain.
+    Find the smallest member of the longest amicable chain with no element exceeding one million.
+    '''
+    # idea: the sum of all divisors is easy to compute given a factorization.
+    from subroutines import Factorizer, get_sum_proper_divisors, DFS_SCC
+
+    # compute the divisor sums
+    fac = Factorizer(bound)
+    lookup = dict()
+    for num in tqdm(range(1, bound)):
+        _factors = fac.factorize(num)
+        lookup[num] = get_sum_proper_divisors(_factors)
+
+    # build a graph
+    adjacency_list = [[]] + [None] * (bound - 1)
+    for _key, _value in tqdm(lookup.items()):
+        if _value < bound:
+            adjacency_list[_key] = [_value]
+        else:
+            adjacency_list[_key] = []
+
+    # run strongly-connected components
+    components = DFS_SCC(adjacency_list)
+    longest_chain = max(components, key=lambda x: len(x))
+    return longest_chain, min(longest_chain)
+            
+
 if __name__ == "__main__":
-    print(euler_problem_94())
+    print(euler_problem_95())
