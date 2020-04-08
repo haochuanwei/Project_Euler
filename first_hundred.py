@@ -3492,6 +3492,56 @@ def euler_problem_88(bound=12000):
     return sum(minimal_products)
 
 @wrappy.probe()
+def euler_problem_91(bound=50):
+    '''
+    The problem doesn't show very well in text editors. Go to:
+    https://projecteuler.net/problem=91
+    for the original problem description.
+    '''
+    # idea: the angle POQ or OPQ or OQP must be an right angle. Let's consider those three cases separately.
+    # Let us denote the coordinates of P as (xp, yp), and those of Q as (xq, yq). 
+    # Without loss of generality, we can assume that yp/xp > yq/yp, i.e. the slope along OP is greater than the slope along OQ. This is because those slopes cannot be the same if OPQ were to be a triangle. Denote this assumption as (*slope).
+    # In fact, we can further assume that xp<=xq and that yp>=yq. Think of this in a contrapositive manner: given (*slope), xp > xq would imply that OQP > 90 degrees, and yp < yq would imply that OPQ > 90 degrees. Denote this assumption as (*order)
+    
+    # initialize a count over all cases
+    from collections import defaultdict
+    contributions = defaultdict(int)
+    
+    # case 1: POQ is a right angle
+    # This combined with (*slope) implies that P must be on the y-axis, and Q must be on the x-axis, because xp, xq, yp, yq are bounded above or at 0. 
+    # P and Q both contribute a linear number of possibilities matching the coordinate bound
+    contributions['POQ'] = bound ** 2
+
+    # be careful with this tolerance; setting the value too large can lead to over-counting when bound is large, whereas setting it too small will lose cases
+    tolerance = 1e-4
+    
+    # case 2: OPQ is a right angle
+    # This implies that the vector OP is orthogonal to the vector QP.
+    # Brute force with (*order) in mind.
+    # first count the cases where P is on the y-axis
+    contributions['OPQ-P-on-y-axis'] = bound ** 2
+    # then assume that P is not on the y-axis; then xq is strictly greater than xp and yq is strictly less than yp.
+    for xp in range(1, bound):
+        for yp in range(1, bound+1):
+            pq_slope = - xp / yp
+            # enforce the x-shift of PQ to be an integer
+            for xq in range(xp+1, bound+1):
+                yq = yp + pq_slope * (xq - xp)
+                # terminate if already going out of range
+                if not yq >= 0:
+                    break
+                if abs(yq - round(yq)) < tolerance:
+                    contributions['OPQ-tilt'] += 1
+    
+    # case 3: OQP is a right angle
+    # Case 3 is simply symmetric to case 2 by the reflection along y=x. Hence it has the same number of triangles as case 2, because right angles in a triangle are exclusive and because P and Q cannot both be in the y=x line.
+    contributions['OQP-Q-on-x-axis'] = bound ** 2
+    contributions['OQP-tilt'] = contributions['OPQ-tilt']
+    
+    return contributions, sum(contributions.values())
+    
+    
+@wrappy.probe()
 def euler_problem_92(bound=int(1e+7)):
     '''
     A number chain is created by continuously adding the square of the digits in a number to form a new number until it has been seen before.
@@ -3606,4 +3656,4 @@ def euler_problem_95(bound=round(1e+6)):
             
 
 if __name__ == "__main__":
-    print(euler_problem_95())
+    print(euler_problem_91(50))
