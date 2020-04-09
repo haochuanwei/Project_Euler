@@ -3491,6 +3491,15 @@ def euler_problem_88(bound=12000):
     print(minimal_products)
     return sum(minimal_products)
 
+@wrappy.todo()
+def euler_problem_90():
+    '''
+    The problem doesn't show very well in text editors. Go to:
+    https://projecteuler.net/problem=90
+    for the original problem description.
+    '''
+    
+
 @wrappy.probe()
 def euler_problem_91(bound=50):
     '''
@@ -3655,5 +3664,38 @@ def euler_problem_95(bound=round(1e+6)):
     return longest_chain, min(longest_chain)
             
 
+@wrappy.probe()
+def euler_problem_99():
+    '''
+    Comparing two numbers written in index form like 2^11 and 3^7 is not difficult, as any calculator would confirm that 2^11 = 2048 < 3^7 = 2187.
+    However, confirming that 632382^518061 > 519432^525806 would be much more difficult, as both numbers contain over three million digits.
+    Using base_exp.txt (right click and 'Save Link/Target As...'), a 22K text file containing one thousand lines with a base/exponent pair on each line, determine which line number has the greatest numerical value.
+    NOTE: The first two lines in the file represent the numbers in the example given above.
+    '''
+    from custom_config import get_attachment_path
+    from math import log
+    
+    with open(get_attachment_path(99), 'r') as f:
+        lines = f.read().split('\n')
+        pairs = [[int(_piece) for _piece in _line.split(',')] for _line in lines]
+        
+    greatest_value = 0
+    greatest_line = -1
+    greatest_pair = None
+    
+    # take advantage of that the log function is monotonous
+    for i, _pair in enumerate(pairs):
+        _base, _exponent = _pair
+        _value = _exponent * log(_base)
+        if _value > greatest_value:
+            greatest_value = _value
+            greatest_line = i + 1
+            greatest_pair = (_base, _exponent)
+            
+    return greatest_line, greatest_pair
+
+if __name__ == '__main__':
+    print(euler_problem_99())
+    
 if __name__ == "__main__":
     print(euler_problem_91(50))
