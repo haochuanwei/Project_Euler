@@ -16,6 +16,7 @@ def get_attachment_path(problem_number):
         81: "p081_matrix.txt",
         82: "p082_matrix.txt",
         83: "p083_matrix.txt",
+        99: "p099_base_exp.txt",
     }
     attachment_path = os.path.join(attachment_dir, attachment_filenames[problem_number])
     return attachment_path
