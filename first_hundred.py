@@ -3694,8 +3694,37 @@ def euler_problem_99():
             
     return greatest_line, greatest_pair
 
+
+@wrappy.probe()
+def euler_problem_100(thresh=round(1e+12)):
+    '''
+    If a box contains twenty-one coloured discs, composed of fifteen blue discs and six red discs, and two discs were taken at random, it can be seen that the probability of taking two blue discs, P(BB) = (15/21)×(14/20) = 1/2.
+    The next such arrangement, for which there is exactly 50% chance of taking two blue discs at random, is a box containing eighty-five blue discs and thirty-five red discs.
+    By finding the first arrangement to contain over 10^12 = 1,000,000,000,000 discs in total, determine the number of blue discs that the box would contain.
+    '''
+    # idea: looking for integer solutions to the equation
+    # 2b(b-1) = n(n-1)
+    # where b = # blue discs and n = # total discs
+
+    # There is a recurrence relation which is totally not obvious:
+    # b_(k+1) = 3b_k + 2n_k - 2
+    # n_(k+1) = 4b_k + 3n_k - 3
+    # However, considering that b is roughly n/sqrt(2), if one suspected that such a recurrence relation exists in the first place, the coefficients for b_k and n_k should make sense for keeping such a ratio with the lowest integer coefficients.
+    # The -2 and -3 corrections can be identified through trial and error.
+
+    # use the recurrence relation to achieve log(thresh) running time
+    b_prev, n_prev = 15, 21
+    while n_prev < thresh:
+        # recurrence
+        b_current = 3 * b_prev + 2 * n_prev - 2
+        n_current = 4 * b_prev + 3 * n_prev - 3
+        b_prev, n_prev = b_current, n_current
+        # sanity check
+        lhs = 2 * b_prev * (b_prev - 1)
+        rhs = n_prev * (n_prev - 1)
+        assert lhs == rhs
+
+    return b_prev, n_prev
+
 if __name__ == '__main__':
-    print(euler_problem_99())
-    
-if __name__ == "__main__":
-    print(euler_problem_91(50))
+    print(euler_problem_100())
