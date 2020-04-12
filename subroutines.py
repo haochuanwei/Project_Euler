@@ -1332,3 +1332,40 @@ def pythagorean_triplets(bound, ratio_lower_bound=0.0, ratio_upper_bound=1.0, co
     return triplets
 
 
+class IntegerModulos(object):
+    '''
+    Integer in a modulos space.
+    '''
+    def __init__(self, value, modulos):
+        assert isinstance(value, int)
+        assert isinstance(modulos, int)
+        self.__value = value
+        self.__modulos = modulos
+        self._reset()
+        
+    def _reset(self):
+        self.__value = self.__value % self.__modulos
+        
+    def __add__(self, num):
+        assert isinstance(num, int)
+        retval = IntegerModulos(self.__value + num, self.__modulos)
+        return retval
+    
+    def __sub__(self, num):
+        assert isinstance(num, int)
+        retval = IntegerModulos(self.__value - num, self.__modulos)
+        return retval
+    
+    def __mul__(self, num):
+        assert isinstance(num, int)
+        retval = IntegerModulos(self.__value * num, self.__modulos)
+        return retval
+        
+    def value(self):
+        return self.__value
+    
+    def __repr__(self):
+        return self.__value.__repr__()
+    
+    def __str__(self):
+        return self.__value.__str__()
