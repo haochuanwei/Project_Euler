@@ -2929,8 +2929,8 @@ def euler_problem_77(thresh=5000, bound=10000):
     return None
 
 
-@wrappy.todo()
-def euler_problem_78(n=1000000):
+@wrappy.probe()
+def euler_problem_78(modulos=1000000):
     """
     Let p(n) represent the number of different ways in which n coins can be separated into piles. For example, five coins can be separated into piles in exactly seven different ways, so p(5)=7.
     OOOOO
@@ -2942,7 +2942,27 @@ def euler_problem_78(n=1000000):
     O   O   O   O   O
     Find the least value of n for which p(n) is divisible by one million.
     """
+    # I looked this up and found that it required specific mathematical knowledge to solve efficiently.
+    candidates = [1]
 
+    # dynamical programming using pentagonal numbers
+    # reference: https://www.mathblog.dk/project-euler-78-coin-piles/
+    idx = 1
+    while True:
+        i, penta = 0, 1
+        candidates.append(0)
+        
+        while penta <= idx:
+            sign = -1 if (i % 4 > 1) else 1
+            candidates[idx] += sign * candidates[idx - penta]
+            i += 1
+            j = (i // 2 + 1) if i % 2 == 0 else -1 * (i // 2 + 1)
+            penta = j * (3 * j - 1) // 2
+            
+        candidates[idx] %= modulos
+        if candidates[idx] == 0:
+            return idx
+        idx += 1
 
 @wrappy.probe()
 def euler_problem_79():
@@ -3748,4 +3768,4 @@ def euler_problem_100(thresh=round(1e+12)):
     return b_prev, n_prev
 
 if __name__ == '__main__':
-    print(euler_problem_100())
+    print(euler_problem_78())
