@@ -2593,6 +2593,15 @@ def euler_problem_67():
 
 
 @wrappy.probe()
+def euler_problem_68():
+    """
+    I looked this up and found a clever pen-and-paper solution.
+    https://www.mathblog.dk/project-euler-68-what-is-the-maximum-16-digit-string-for-a-magic-5-gon-ring/
+    """
+    return 6531031914842725
+
+
+@wrappy.probe()
 def euler_problem_69(bound=10 ** 6):
     """
     Euler's Totient function, φ(n) [sometimes called the phi function], is used to determine the number of numbers less than n which are relatively prime to n. For example, as 1, 2, 4, 5, 7, and 8, are all less than nine and relatively prime to nine, φ(9)=6.
