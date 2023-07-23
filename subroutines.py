@@ -69,6 +69,8 @@ class Factorizer:  # pylint: disable=too-few-public-methods
         """
         from math import ceil, sqrt
         # we only need primes up to sqrt(bound) because if none of those primes divide a number under bound, then bound must be prime
+        if hasattr(self, 'list_primes') and self.list_primes[-1] ** 2 > self.bound:
+            return
         self.list_primes = all_primes_under(ceil(sqrt(self.bound)))
         self.set_primes = set(self.list_primes)
 
@@ -82,12 +84,6 @@ class Factorizer:  # pylint: disable=too-few-public-methods
                 return _p
         # if none of the primes divide num, then num is a prime
         return num
-    # to be deprecated ------
-        #raise ValueError(
-        #    "Unexpected behavior: {0} is not divisible by any number from {1}".format(
-        #        num, self.list_primes
-        #    )
-        #)
 
     def factorize(self, num):
         """
@@ -136,6 +132,16 @@ def get_num_divisors(factorization):
     powers = list(factorization.values())
     num_divisors = reduce(lambda x, y: x * y, [_p + 1 for _p in powers])
     return num_divisors
+
+
+def get_all_divisors(factorization):
+    """
+    Get all the divisors of a number given its factorization.
+    """
+    divisors = [1]
+    for _base, _power in factorization.items():
+        divisors = [_div * (_base ** _p) for _p in range(0, _power + 1) for _div in divisors]
+    return divisors
 
 
 def get_sum_proper_divisors(factorization):
@@ -285,8 +291,7 @@ def all_primes_under(bound):
 
     # use a list for keeping primes in ascending order
     cache_primes = []
-    print(f'Calculating primes under {bound}')
-    for candidate in tqdm(range(2, bound)):
+    for candidate in tqdm(range(2, bound), desc=f'Calculating primes under {bound}'):
         is_prime_with_cache(candidate, cache_primes)
     return cache_primes[:]
 

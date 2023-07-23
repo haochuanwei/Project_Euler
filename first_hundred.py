@@ -3283,7 +3283,7 @@ def euler_problem_84(dice_faces=4):
     
     def D_matrix():
         D = np.zeros((120, 120))
-        for _pos in tqdm(range(0, 40), desc="D matrix"):
+        for _pos in range(0, 40):
             for _phase in range(0, 3):
                 _i = _phase * 40 + _pos
                 if _pos == POI.G2J:
@@ -3316,7 +3316,7 @@ def euler_problem_84(dice_faces=4):
                 
     def R_matrix():
         R = np.zeros((120, 120))
-        for _pos in tqdm(range(0, 40), desc="R matrix"):
+        for _pos in range(0, 40):
             for _phase in range(0, 3):
                 _i = _phase * 40 + _pos
                 R[_i, :] = roll_vector(_pos, _phase)
@@ -3333,11 +3333,6 @@ def euler_problem_84(dice_faces=4):
         vec = new_vec
     
     position_vec = vec[:40] + vec[40:80] + vec[80:]
-    print(D)
-    print(np.sum(vec[:40]))
-    print(np.sum(vec[40:80]))
-    print(np.sum(vec[80:]))
-    print(R)
     return np.argsort(position_vec)[-3:][::-1], position_vec
 
 
@@ -3602,13 +3597,134 @@ def euler_problem_88(bound=12000):
     return sum(set([k_to_best_N[_k] for _k in range(2, bound + 1)])), k_to_best_N
 
 
-@wrappy.todo()
+@wrappy.probe()
 def euler_problem_90():
     '''
     The problem doesn't show very well in text editors. Go to:
     https://projecteuler.net/problem=90
     for the original problem description.
     '''
+    '''
+    Idea: enumerate all the combinations on one cube.
+    Then we know the digits that the other cube has to include.
+    Then we know the combinations the other cube can carry.
+    Write the arrangement as a sorted 2-by-6 tuple to deduplicate.
+    '''
+    equivalents = {6: 9, 9: 6}
+    required_pairs = [
+        [0, 1],
+        [0, 4],
+        [0, 9],
+        [1, 6],
+        [2, 5],
+        [3, 6],
+        [4, 9],
+        [6, 4],
+        [8, 1],
+    ]
+
+    def digits_from_cube(cube):
+        '''
+        Get the set of digits that can be found on a cube.
+        Essnetially handling the 6-and-9 equivalance.
+        '''
+        digits = set(cube)
+        for _k, _v in equivalents.items():
+            if _k in digits:
+                digits.add(_v)
+        return digits
+
+    def verify_cube_pair(first_cube, second_cube):
+        '''
+        Verify that a cube pair meets all the required digit pairs.
+        '''
+        first_digits = digits_from_cube(first_cube)
+        second_digits = digits_from_cube(second_cube)
+        for _l, _r in required_pairs:
+            if not (
+                (
+                    _l in first_digits and _r in second_digits
+                ) or (
+                    _r in first_digits and _l in second_digits
+                )
+            ):
+                return False
+        return True
+
+    def fill_second_cube_solutions(first_cube, second_cube_musts):
+        '''
+        Given the first cube and the must-haves of the second cube,
+        fill up the rest to meet all the required digit pairs.
+        '''
+        solutions = set()
+        arr = [_d for _d in range(0, 10) if _d not in second_cube_musts]
+        faces_to_fill = 6 - len(second_cube_musts)
+        for _partial in generate_cubes(faces=faces_to_fill, low=0, high=len(arr)-1):
+            _cube = set([
+                *second_cube_musts,
+                *[arr[i] for i in _partial],
+            ])
+            if verify_cube_pair(first_cube, _cube):
+                solutions.add(tuple(sorted(_cube)))
+        return solutions
+
+    def second_cube_musts_solutions(first_cube):
+        '''
+        Compute all the digits that the second cube MUST include,
+        i.e. every single solution contains such digit.
+        6 and 9 get treated as two instances.
+        '''
+        first_digits = digits_from_cube(first_cube)
+        second_cube = set()
+        for _l, _r in required_pairs:
+            # if neither is in the first cube, we can't find an answer
+            if _l not in first_digits and _r not in first_digits:
+                return []
+            # if only one of the digits is in the first cube, it's easy to call the other mandatory
+            elif _l in first_digits and _r not in first_digits:
+                second_cube.add(6 if _r in equivalents else _r)
+            elif _l not in first_digits and _r in first_digits:
+                second_cube.add(6 if _l in equivalents else _l)
+            # if both are in the first cube, neither is "absolutely" mandatory
+            else:
+                pass
+        
+        solutions = [second_cube]
+        if 6 in second_cube:
+            alt_second_cube = second_cube.copy()
+            alt_second_cube.discard(6)
+            alt_second_cube.add(9)
+            solutions = [second_cube, alt_second_cube]
+        return solutions
+
+    def generate_cubes(faces=6, low=0, high=9):
+        '''
+        Recursive approach to generate arbitrarily-many-faced cubes.
+        '''
+        eff_high = high + 1 - faces
+        if faces == 1:
+            for _value in range(low, eff_high+1):
+                yield [_value]
+        else:
+            for _value in range(low, eff_high+1):
+                for _cube in generate_cubes(faces=faces-1, low=_value+1, high=high):
+                    yield [_value, *_cube]
+
+    solutions = set()
+    for _first_cube in generate_cubes(faces=6, low=0, high=9):
+        _first_set = set(_first_cube)
+        _first_tup = tuple(sorted(_first_cube))
+        _second_cube_musts_solutions = second_cube_musts_solutions(_first_set)
+        for _second_cube_musts in _second_cube_musts_solutions:
+            _second_cube_solutions = fill_second_cube_solutions(_first_set, _second_cube_musts)
+            for _second_cube in _second_cube_solutions:
+                _second_tup = tuple(sorted(_second_cube))
+                _sol = tuple((_first_tup, _second_tup)) if _first_tup < _second_tup else tuple([_second_tup, _first_tup])
+                solutions.add(_sol)
+
+    for _sol in solutions:
+        assert verify_cube_pair(*_sol) 
+    return solutions
     
 
 @wrappy.probe()
