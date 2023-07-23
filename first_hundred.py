@@ -6,6 +6,7 @@ Solutions to the first hundred problems of Project Euler.
 
 import wrappy
 from tqdm import tqdm
+from pprint import pprint
 
 
 @wrappy.probe()
@@ -3857,6 +3858,7 @@ def euler_problem_94(bound=int(1e+9)):
             triangles.append((_c, _c, 2 * _b))
     return triangles, total
 
+
 @wrappy.probe()
 def euler_problem_95(bound=round(1e+6)):
     '''
@@ -3890,6 +3892,177 @@ def euler_problem_95(bound=round(1e+6)):
     longest_chain = max(components, key=lambda x: len(x))
     return longest_chain, min(longest_chain)
             
+
+@wrappy.probe()
+def euler_problem_96():
+    '''
+    The problem doesn't show very well in text editors. Go to:
+    https://projecteuler.net/problem=96
+    for the original problem description.
+    '''
+    class Sudoku:
+        def __init__(self):
+            self.setup()
+
+        def load(self, arr):
+            assert len(arr) == 9
+            for _row in arr:
+                assert len(_row) == 9
+            for i in range(9):
+                for j in range(9):
+                    v = arr[i][j]
+                    if v != 0:
+                        self.set_value(i, j, v)
+
+        def setup(self):
+            self.arr = [[0 for j in range(9)] for i in range(9)]
+            self.cell_candidates = [
+                [set(range(1, 10)) for j in range(9)] for i in range(9)
+            ]
+            self.group_candidates = {
+                **{f'row{i}': {v: set([(i, _) for _ in range(9)]) for v in range(1, 10)} for i in range(9)},
+                **{f'col{j}': {v: set([(_, j) for _ in range(9)]) for v in range(1, 10)} for j in range(9)},
+                **{f'block{i}{j}': {v: set([(3 * i + _i, 3 * j + _j) for _i in range(0, 3) for _j in range(0, 3)]) for v in range(1, 10)} for i in range(3) for j in range(3)},
+            }
+
+        def set_value(self, i, j, v):
+            self.arr[i][j] = v
+            # cells already with a number have no candidates
+            self.cell_candidates[i][j].clear()
+            # other cells in its row, column, and block will not have the same value
+            for _ in range(9):
+                self.eliminate(i, _, v)
+                self.eliminate(_, j, v)
+            bi, bj = i - (i % 3), j - (j % 3)
+            for _i in range(3):
+                for _j in range(3):
+                    self.eliminate(bi + _i, bj + _j, v)
+
+            # groups containing this cell drops all candidates with the value
+            self.group_candidates[f'row{i}'][v].clear()
+            self.group_candidates[f'col{j}'][v].clear()
+            self.group_candidates[f'block{i // 3}{j // 3}'][v].clear()
+            # groups containing this cell drops this cell from candidates
+            for _ in range(1, 10):
+                self.group_candidates[f'row{i}'][_].discard((i, j))
+                self.group_candidates[f'col{j}'][_].discard((i, j))
+                self.group_candidates[f'block{i // 3}{j // 3}'][_].discard((i, j))
+
+        def eliminate(self, i, j, v):
+            self.cell_candidates[i][j].discard(v)
+            self.group_candidates[f'row{i}'][v].discard((i, j))
+            self.group_candidates[f'col{j}'][v].discard((i, j))
+            self.group_candidates[f'block{i // 3}{j // 3}'][v].discard((i, j))
+
+        def solve_from_cells(self):
+            progress = False
+            stack = [(i, j) for j in range(9) for i in range(9)]
+            while stack:
+                _i, _j = stack.pop(-1)
+                if self.arr[_i][_j] != 0:
+                    continue
+                if len(self.cell_candidates[_i][_j]) == 1:
+                    progress = True
+                    _v = self.cell_candidates[_i][_j].pop()
+                    self.set_value(_i, _j, _v)
+                    for _ in range(9):
+                        if self.arr[_i][_] == 0:
+                            stack.append((_i, _))
+                        if self.arr[_][_j] == 0:
+                            stack.append((_, _j))
+            return progress
+        
+        def solve_from_groups(self):
+            progress = False
+            for _, _lookup in self.group_candidates.items():
+                for _v, _candidates in _lookup.items():
+                    if len(_candidates) == 1:
+                        progress = True
+                        _i, _j = _candidates.pop()
+                        self.set_value(_i, _j, _v)
+            if progress:
+                self.solve_from_groups()
+            return progress
+        
+        def solve_without_branching(self):
+            progress = False
+            while True:
+                cells_progress = self.solve_from_cells()
+                groups_progress = self.solve_from_groups()
+                progress = cells_progress or groups_progress
+
+                # terminate when both approaches hit a dead end
+                if not progress:
+                    break
+        
+        def solve(self, branch_threshold=2, branch_depth=3):
+            if not self.solvable():
+                return False
+
+            self.solve_without_branching()
+            if self.solved():
+                return True
+
+            if branch_depth < 1:
+                return False
+            for _i in range(9):
+                for _j in range(9):
+                    _candidates = self.cell_candidates[_i][_j]
+                    if len(_candidates) <= branch_threshold:
+                        for _v in _candidates:
+                            _sub = Sudoku()
+                            _sub.load(self.arr)
+                            _sub.set_value(_i, _j, _v)
+                            if _sub.solve(branch_depth=branch_depth-1):
+                                self.load(_sub.arr)
+                                return True
+            return False
+
+        def solved(self):
+            for i in range(9):
+                for j in range(9):
+                    if self.arr[i][j] == 0:
+                        return False
+            return True
+
+        def solvable(self):
+            for i in range(9):
+                for j in range(9):
+                    if self.arr[i][j] == 0 and len(self.cell_candidates) == 0:
+                        return False
+            return True
+
+    with open('attachments/p096_sudoku.txt', 'r') as f:
+        lines = f.read().split('\n')
+
+    target_sum = 0
+    solved_count = 0
+    arr = []
+    for _line in lines:
+        # ignore trivial lines
+        if len(_line) < 1:
+            continue
+        
+        if _line.startswith('Grid'):
+            assert len(arr) == 0
+        else:
+            arr.append(list(map(int, list(_line))))
+    
+        # whenever 9 rows are ready, solve the sudoku
+        if len(arr) == 9:
+            _sudoku = Sudoku()
+            _sudoku.load(arr)
+            if not _sudoku.solve():
+                pprint(arr)
+            else:
+                target_sum += _sudoku.arr[0][0] * 100
+                target_sum += _sudoku.arr[0][1] * 10
+                target_sum += _sudoku.arr[0][2]
+                solved_count += 1
+            arr.clear()
+
+    return target_sum, solved_count
+
 
 @wrappy.probe()
 def euler_problem_97(digits=10):
@@ -3973,6 +4146,7 @@ def euler_problem_100(thresh=round(1e+12)):
         assert lhs == rhs
 
     return b_prev, n_prev
+
 
 if __name__ == '__main__':
     print(euler_problem_78())
