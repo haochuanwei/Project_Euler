@@ -3222,6 +3222,126 @@ def euler_problem_83():
 
 
 @wrappy.probe()
+def euler_problem_84(dice_faces=4):
+    """
+    The description doesn't show very well in text editors. Go to:
+    https://projecteuler.net/problem=84
+    for the original problem description.
+    """
+    import numpy as np
+    """
+    Idea: looking for the eigenvector of a transition matrix T.
+    T = D * R where
+    - R is the dice-roll (including three-consecutive-doubles) matrix
+    - D is the displacement (CC/CH) matrix
+    operating on a 40*3=120-dimensional vector where
+    - the 40 comes from 40 tiles of monopoly ("position")
+    - the 3 comes from 0, 1, or 2 consecutive ("phase")
+    """
+    class POI:
+        GO = 0
+        JAIL = 10
+        G2J = 30
+        CH_LOOKUP = {7, 22, 36}
+        CC_LOOKUP = {2, 17, 33}
+
+    # hard-code Chance transition vector
+    CH_NEXT_R = {
+        7: 15, 22: 25, 36: 5,
+    }
+    CH_NEXT_U = {
+        7: 12, 22: 28, 36: 12,
+    }
+
+    def ch_vector(position, phase):
+        vecs_by_phase = [np.zeros(40) for i in range(3)]
+        possibilities = [
+            *[POI.GO, POI.JAIL, 11, 24, 39, 5],
+            CH_NEXT_R[position], CH_NEXT_R[position],
+            CH_NEXT_U[position],
+            (position + 37) % 40,
+        ]
+        assert len(possibilities) == 10
+        vecs_by_phase[phase][position] += 6 / 16
+        for _pos in possibilities:
+            vecs_by_phase[0 if _pos == POI.JAIL else phase][_pos] += 1 / 16
+        
+        vector = np.concatenate(vecs_by_phase)
+        assert np.sum(vector) == 1, (vector, np.sum(vector))
+        return vector
+
+    # hard-code Community Chest transition vector
+    def cc_vector(position, phase):
+        vecs_by_phase = [np.zeros(40) for i in range(3)]
+        vecs_by_phase[phase][position] += 14 / 16
+        vecs_by_phase[phase][POI.GO] += 1 / 16
+        vecs_by_phase[0][POI.JAIL] += 1 / 16
+        
+        vector = np.concatenate(vecs_by_phase)
+        assert np.sum(vector) == 1, (vector, np.sum(vector))
+        return vector
+    
+    def D_matrix():
+        D = np.zeros((120, 120))
+        for _pos in tqdm(range(0, 40), desc="D matrix"):
+            for _phase in range(0, 3):
+                _i = _phase * 40 + _pos
+                if _pos == POI.G2J:
+                    D[_i, POI.JAIL] = 1
+                elif _pos in POI.CH_LOOKUP:
+                    D[_i, :] = ch_vector(_pos, _phase)
+                elif _pos in POI.CC_LOOKUP:
+                    D[_i, :] = cc_vector(_pos, _phase)
+                else:
+                    D[_i, _i] = 1
+                
+        assert (np.sum(D, axis=1) == np.array([1] * 120)).all()
+        assert np.sum(D[:, 30]) == 0, D[30]
+        return np.transpose(D)
+
+    def roll_vector(position, phase):
+        vector = np.zeros(120)
+        unit_prob = 1 / (dice_faces ** 2)
+        for _da in range(1, dice_faces + 1):
+            for _db in range(1, dice_faces + 1):
+                _next_position = (position + _da + _db) % 40
+                _next_phase = (phase + 1) if _da == _db else 0
+                if _next_phase > 2:
+                    _next_position = POI.JAIL
+                    _next_phase = 0
+                _i = _next_phase * 40 + _next_position
+                vector[_i] += unit_prob
+        assert np.sum(vector) == 1, (vector, np.sum(vector))
+        return vector
+                
+    def R_matrix():
+        R = np.zeros((120, 120))
+        for _pos in tqdm(range(0, 40), desc="R matrix"):
+            for _phase in range(0, 3):
+                _i = _phase * 40 + _pos
+                R[_i, :] = roll_vector(_pos, _phase)
+        assert (np.sum(R, axis=1) == np.array([1] * 120)).all()
+        return np.transpose(R)
+    
+    D = D_matrix()
+    R = R_matrix()
+    vec = np.array([1] + [0] * 119)
+    while True:
+        new_vec = D.dot(R.dot(vec))
+        if np.allclose(new_vec, vec, rtol=1e-8, atol=1e-12):
+            break
+        vec = new_vec
+    
+    position_vec = vec[:40] + vec[40:80] + vec[80:]
+    print(D)
+    print(np.sum(vec[:40]))
+    print(np.sum(vec[40:80]))
+    print(np.sum(vec[80:]))
+    print(R)
+    return np.argsort(position_vec)[-3:][::-1], position_vec
+
+
+@wrappy.probe()
 def euler_problem_85(target=2000000):
     """
     The description doesn't show very well in text editors. Go to:
@@ -3409,7 +3529,6 @@ def euler_problem_87(bound=int(5e7)):
     
     return len(qualified)
 
-@wrappy.todo("The approach is incorrect in the iterative approach to find next the k'. One might need to consider swapping factors, which is much more complicated.")
 @wrappy.probe()
 def euler_problem_88(bound=12000):
     '''
@@ -3426,99 +3545,62 @@ def euler_problem_88(bound=12000):
     What is the sum of all the minimal product-sum numbers for 2≤k≤12000?
     '''
 
-    from subroutines import least_divisor, has_nontrivial_divisor, Factorizer
+    from subroutines import get_all_divisors, Factorizer
     # the greatest possible minimal product-sum for k cannot exceed 2 * k
+    # this is because 2 * k = 1 + 1 + ... + 1 + 2 + k will always give k numbers on the right hand side
     fac = Factorizer(2 * bound + 1)
     
-    class Solution(object):
+    # We want to compute the possible k values for each N in the target range.
+    # For example, 8 = 2 * 4 = 2 * 2 * 2, giving k = 4 and k = 5.
+    # 12 = 2 * 2 * 3 = 3 * 4 = 2 * 6, giving k = 8 and k = 7 and k = 6.
+    # This can be costly because there are so many ways to write N as a product.
+    # Consider deriving k values from those of factors of N denoted by m. m * f = N.
+    # For example, 8 = 2 * 4 = 4 * 2, so the `k_m = 2` from the factor `m = 4` can be useful:
+    # One of the k_N's will be k_m + 1 + ((f - 1) * m - f).
+
+    class FindKValuesGivenN(object):
         '''
-        Data structure specifically for this problem.
-        Components:
-        - traditional factorization
-        - all the product-sum factorizations 
+        Finds k values for N in a dynamic programming manner.
         '''
-        def __init__(self, num, cache):
-            '''
-            cache - stores Solution objects corresponding to solved numbers.
-            '''
-            divisor = least_divisor(num)
-            if divisor == num:
-                self.sequences = [(num)]
-            else:
-                quotient = num // divisor
-                sub_solution = cache[quotient]
+        def __init__(self):
+            self.cache = {1: set()}
 
-    class Sequence(object):
-        def __init__(self, factors):
-            '''
-            Create a product-sum sequence from non-1 factors.
-            '''
-            self.factors = factors
-            factors_sum = 0
-            product = 1
-            for _factor in self.factors:
-                product *= _factor
-                factors_sum += _factor
-            self.product = product
-            self.padding = product - factors_sum
+        def find(self, num):
+            # cached case
+            if num in self.cache:
+                return self.cache[num]
+            
+            factorization = fac.factorize(num)
+            num_prime_factors = sum(factorization.values())
+            # base case: prime
+            if num_prime_factors == 1:
+                self.cache[num] = set()
+                return set()
+            
+            # recursive case: composite
+            k_set = set()
+            for _f in get_all_divisors(factorization):
+                if _f == 1 or _f == num or _f ** 2 > num:
+                    continue
+                _m = int(num / _f)
+                _m_k_list = self.find(_m)
+                # products that did not use _m as a factor
+                k_set.update([_k + 1 + ((_f - 1) * _m - _f) for _k in _m_k_list])
+                # product that uses _m as a factor
+                k_set.add(num - _m - _f + 2)
 
-        def view(self):
-            '''
-            The product-sum representation.
-            '''
-            return [1] * self.padding + self.factors
+            self.cache[num] = k_set
+            return k_set
 
-        def k(self):
-            '''
-            The number of terms in the product-sum representation.
-            '''
-            return self.padding + len(self.factors)
+    solver = FindKValuesGivenN()
+    k_to_best_N = {_k: 2 * _k for _k in range(2, bound + 1)}
+    for _num in tqdm(range(4, 2 * bound + 1), desc="Getting k values for each N"):
+        k_values = solver.find(_num)
+        for _k in k_values:
+            k_to_best_N[_k] = min(k_to_best_N.get(_k, 2 * _k), _num)
+    
+    return sum(set([k_to_best_N[_k] for _k in range(2, bound + 1)])), k_to_best_N
 
-        def __mul__(self, coeff):
-            '''
-            Multiply self by a coefficient and return.
-            Adjust padding according to the new product.
-            '''
-            factors = self.factors[:]
-            factors.append(coeff)
-            seq = Sequence(factors)
-            return seq
-
-    k_to_min_product = dict()
-    # start checking numbers from 4, the smallest composite
-    candidate = 4
-    # keep trying greater numbers until answers don't receive updates for a while
-    tolerance = 1000
-    flag_for_more_candidates = True
-    while flag_for_more_candidates:
-        # skip prime numbers
-        if not has_nontrivial_divisor(candidate):
-            candidate += 1
-            continue
-
-        seq = Sequence(candidate)
-        # keep finding greater k until it does not exist
-        flag_for_greater_k = True
-
-        while flag_for_greater_k:
-            _k = seq.k()
-            # stop if k is too large
-            if _k > bound:
-                break
-            # update solution for k if not previously found
-            if not _k in k_to_min_product:
-                k_to_min_product[_k] = candidate
-                most_recent_valid_candidate = candidate
-            flag_for_greater_k = seq.grow()
-        
-        candidate += 1
-        if  candidate - most_recent_valid_candidate > tolerance:
-            break
-
-    minimal_products = set([k_to_min_product[_key] for _key in range(2, bound+1)])
-    print(k_to_min_product)
-    print(minimal_products)
-    return sum(minimal_products)
 
 @wrappy.todo()
 def euler_problem_90():
