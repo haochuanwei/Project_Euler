@@ -1337,6 +1337,25 @@ def pythagorean_triplets(bound, ratio_lower_bound=0.0, ratio_upper_bound=1.0, co
     return triplets
 
 
+def generate_digit_combinations(elements=6, low=0, high=9):
+    '''
+    Recursive approach to generate distinct digit combinations.
+    Combinations are always in ascending order.
+    '''
+    eff_high = high + 1 - elements
+    if elements == 1:
+        for _value in range(low, eff_high+1):
+            yield [_value]
+    else:
+        for _value in range(low, eff_high+1):
+            for _cube in generate_digit_combinations(
+                elements=elements-1,
+                low=_value+1,
+                high=high,
+            ):
+                yield [_value, *_cube]
+
+
 class IntegerModulos(object):
     '''
     Integer in a modulos space.

@@ -3605,6 +3605,7 @@ def euler_problem_90():
     https://projecteuler.net/problem=90
     for the original problem description.
     '''
+    from subroutines import generate_digit_combinations as generate_cubes
     '''
     Idea: enumerate all the combinations on one cube.
     Then we know the digits that the other cube has to include.
@@ -3697,19 +3698,6 @@ def euler_problem_90():
             alt_second_cube.add(9)
             solutions = [second_cube, alt_second_cube]
         return solutions
-
-    def generate_cubes(faces=6, low=0, high=9):
-        '''
-        Recursive approach to generate arbitrarily-many-faced cubes.
-        '''
-        eff_high = high + 1 - faces
-        if faces == 1:
-            for _value in range(low, eff_high+1):
-                yield [_value]
-        else:
-            for _value in range(low, eff_high+1):
-                for _cube in generate_cubes(faces=faces-1, low=_value+1, high=high):
-                    yield [_value, *_cube]
 
     solutions = set()
     for _first_cube in generate_cubes(faces=6, low=0, high=9):
@@ -3823,6 +3811,84 @@ def euler_problem_92(bound=int(1e+7)):
         solution[loop_start] += 1
 
     return solution
+
+@wrappy.probe()
+def euler_problem_93():
+    '''
+    The problem doesn't show very well in text editors. Go to:
+    https://projecteuler.net/problem=93
+    for the original problem description.
+    '''
+    from subroutines import generate_digit_combinations
+    '''
+    Idea: compute all the combinations of four digits.
+    Then express all possible outcomes using doubles, triples, and quadruples.
+    '''
+    def doubles(a, b):
+        results = [a + b, abs(a - b), a * b, a / b, b / a]
+        return set([_r for _r in results if _r > 0])
+    
+    def triples(a, b, c):
+        results = set()
+        ab_set = doubles(a, b)
+        ac_set = doubles(a, c)
+        bc_set = doubles(b, c)
+        for _set, _r in [
+            (ab_set, c),
+            (ac_set, b),
+            (bc_set, a),
+        ]:
+            for _l in _set:
+                results.update(doubles(_l, _r))
+        return results
+
+    def quadruples(a, b, c, d):
+        results = set()
+        ab_set = doubles(a, b)
+        ac_set = doubles(a, c)
+        ad_set = doubles(a, d)
+        bc_set = doubles(b, c)
+        bd_set = doubles(b, d)
+        cd_set = doubles(c, d)
+        for _sl, _sr in [
+            (ab_set, cd_set),
+            (ac_set, bd_set),
+            (ad_set, bc_set),
+        ]:
+            for _l in _sl:
+                for _r in _sr:
+                    results.update(doubles(_l, _r))
+        
+        abc_set = triples(a, b, c)
+        abd_set = triples(a, b, d)
+        acd_set = triples(a, c, d)
+        bcd_set = triples(b, c, d)
+        for _set, _r in [
+            (abc_set, d),
+            (abd_set, c),
+            (acd_set, b),
+            (bcd_set, a),
+        ]:
+            for _l in _set:
+                results.update(doubles(_l, _r))
+
+        return results
+
+    def max_chain(a, b, c, d):
+        i = 1
+        combinations = quadruples(a, b, c, d)
+        while i in combinations:
+            i += 1
+        return i - 1
+    
+    best_digits, best_value = None, 0
+    for _abcd in generate_digit_combinations(elements=4, low=1, high=9):
+        _value = max_chain(*_abcd)
+        if _value > best_value:
+            best_digits = _abcd
+            best_value = _value
+    return best_digits, best_value
+
 
 @wrappy.probe()
 def euler_problem_94(bound=int(1e+9)):
@@ -4068,9 +4134,7 @@ def euler_problem_96():
 def euler_problem_97(digits=10):
     '''
     The first known prime found to exceed one million digits was discovered in 1999, and is a Mersenne prime of the form 2^6972593 − 1; it contains exactly 2,098,960 digits. Subsequently other Mersenne primes, of the form 2^p − 1, have been found which contain more digits.
-
     However, in 2004 there was found a massive non-Mersenne prime which contains 2,357,207 digits: 28433×2^7830457 + 1.
-
     Find the last ten digits of this prime number.
     '''
     # idea: we can discard all digits beyond the last ten.
@@ -4084,6 +4148,89 @@ def euler_problem_97(digits=10):
     num += 1
     return num.value()
 
+@wrappy.probe()
+def euler_problem_98(bound=int(1e+6)):
+    '''
+    By replacing each of the letters in the word CARE with 1, 2, 9, and 6 respectively, we form a square number: 1296 = 36^2.
+    What is remarkable is that, by using the same digital substitutions, the anagram, RACE, also forms a square number: 9216 = 96^2.
+    We shall call CARE (and RACE) a square anagram word pair and specify further that leading zeroes are not permitted, neither may a different letter have the same digital value as another letter.
+    Using p098_words.txt, a 16K text file containing nearly two-thousand common English words, find all the square anagram word pairs (a palindromic word is NOT considered to be an anagram of itself).
+    What is the largest square number formed by any member of such a pair?
+    '''
+    from collections import defaultdict
+    '''
+    Idea: finding anagrams is easy, just sort each word by characters to form a lookup key.
+    So we can pre-compute all the word anagram tuples and the number anagram tuples.
+    Only tuples of the same element length can ever match.
+    '''
+    
+    with open('attachments/p098_words.txt', 'r') as f:
+        words = [_w for _w in f.read().split(',') if len(_w) > 0]
+
+    squares = [str(_num ** 2) for _num in range(4, bound)]
+        
+    def compute_anagrams(pool, str_func):
+        lookup = defaultdict(set)
+
+        for _v in pool:
+            _key = ''.join(sorted(list(str_func(_v))))
+            lookup[_key].add(_v)
+
+        anagrams = defaultdict(list)
+        for _k, _vals in lookup.items():
+            if len(_vals) >= 2:
+                anagrams[len(_k)].append(_vals)
+        return anagrams
+    
+    word_anagrams = compute_anagrams(words, lambda x: x)
+    num_anagrams = compute_anagrams(squares, lambda x: x)
+    if max(num_anagrams.keys()) < max(word_anagrams.keys()):
+        raise ValueError(f"Bound {bound} is too small.")
+
+    def find_max_square(words, nums):
+        '''
+        Scan for square anagram pairs from potentially matching sets.
+        Return the maxmimal square from successful matchings.
+        '''
+        # for each word, try every possible number representation
+        # for each other word, compute the corresponding number to
+        # see if it is in the number set
+        max_square = 0
+
+        for i, _w in enumerate(words):
+            for _ni in nums:
+                _mapping = compute_alphabet_mapping(_w, _ni)
+                if not _mapping:
+                    continue
+
+                for j in range(i+1, len(words)):
+                    _nj = ''.join([_mapping[_c] for _c in words[j]])
+                    if _nj in nums:
+                        max_square = max(max_square, int(_nj))
+        
+        return max_square
+
+    def compute_alphabet_mapping(word, num):
+        mapping, rev_mapping = {}, {}
+        for _w, _d in zip(list(word), list(num)):
+            if _w not in mapping:
+                if _d in rev_mapping:
+                    return None
+                mapping[_w] = _d
+                rev_mapping[_d] = [_w]
+            else:
+                if mapping[_w] != _d:
+                    return None
+        return mapping
+
+    max_square = 0
+    for _k, _words_groups in word_anagrams.items():
+        _nums_groups = num_anagrams[_k]
+        for _words in tqdm(_words_groups, desc=f"Words of length {_k}"):
+            for _nums in _nums_groups:
+                max_square = max(max_square, find_max_square(list(_words), _nums))
+    return max_square
+    
 
 @wrappy.probe()
 def euler_problem_99():
