@@ -3599,6 +3599,114 @@ def euler_problem_88(bound=12000):
 
 
 @wrappy.probe()
+def euler_problem_89():
+    '''
+    For a number written in Roman numerals to be considered valid there are basic rules which must be followed.
+    Even though the rules allow some numbers to be expressed in more than one way there is always a "best" way of writing a particular number.
+    For example, it would appear that there are at least six ways of writing the number sixteen:
+    IIIIIIIIIIIIIIII
+    VIIIIIIIIIII
+    VVIIIIII
+    XIIIIII
+    VVVI
+    XVI
+    However, according to the rules only XIIIIII and XVI are valid, and the last example is considered to be the most efficient, as it uses the least number of numerals.
+    The 11K text file, p089_roman.txt, contains one thousand numbers written in valid, but not necessarily minimal, Roman numerals; see https://projecteuler.net/about=roman_numerals for the definitive rules for this problem.
+    Find the number of characters saved by writing each of these in their minimal form.
+    '''
+    NUMERAL_TO_VALUE = {
+        'I': 1,
+        'V': 5,
+        'X': 10,
+        'L': 50,
+        'C': 100,
+        'D': 500,
+        'M': 1000,
+    }
+    MAGNITUDE_TO_NUMERALS = {
+        0: {
+            1: 'I',
+            5: 'V',
+        },
+        1: {
+            1: 'X',
+            5: 'L',
+        },
+        2: {
+            1: 'C',
+            5: 'D',
+        },
+        3: {
+            1: 'M',
+        }
+    }
+
+    def write_digit(digit, magnitude):
+        '''
+        Digit 4 and 9 need special attention.
+        '''
+        assert magnitude < 4, f"Expected magnitude < 4, got {magnitude}"
+        assert 0 <= digit <= 9, f"Unexpected digit {digit}"
+        if digit == 0:
+            return ''
+        elif magnitude == 3:
+            assert digit != 0, f"Invalid leading digit {digit}"
+            return 'M' * digit
+        else:
+            numerals = MAGNITUDE_TO_NUMERALS[magnitude]
+            if 1 <= digit <= 3:
+                return numerals[1] * digit
+            elif digit == 4:
+                return numerals[1] + numerals[5]
+            elif digit == 5:
+                return numerals[5]
+            elif 6 <= digit <= 8:
+                return numerals[5] + numerals[1] * (digit - 5)
+            else:
+                return numerals[1] + MAGNITUDE_TO_NUMERALS[magnitude+1][1]
+            
+    def write_number(number):
+        if number >= 10000:
+            return (number // 1000) * 'M' + write_number(number % 1000)
+        else:
+            roman = ''
+            number_str = str(number)
+            for i, _d in enumerate(number_str):
+                roman += write_digit(int(_d), magnitude=len(number_str)-1-i)
+            return roman
+
+    def read_number(roman):
+        '''
+        Subtractions happen iff a digit is less than the next.
+        '''
+        # edge case: just one digit
+        if len(roman) == 1:
+            return NUMERAL_TO_VALUE[roman]
+        
+        value, i = 0, 0
+        while i < len(roman) - 1:
+            ci, cj = roman[i], roman[i+1]
+            vi, vj = NUMERAL_TO_VALUE[ci], NUMERAL_TO_VALUE[cj]
+            if vi < vj:
+                value += (vj - vi)
+                i += 2
+            else:
+                value += vi
+                i += 1
+
+        if i == len(roman) - 1:
+            value += NUMERAL_TO_VALUE[roman[-1]]
+
+        return value
+
+    with open('attachments/p089_roman.txt', 'r') as f:
+        original_romans = [_ for _ in f.read().split('\n') if len(_) > 0]
+    numbers = list(map(read_number, original_romans))
+    optimal_romans = list(map(write_number, numbers))
+    return len(''.join(original_romans)) - len(''.join(optimal_romans))
+
+
+@wrappy.probe()
 def euler_problem_90():
     '''
     The problem doesn't show very well in text editors. Go to:
