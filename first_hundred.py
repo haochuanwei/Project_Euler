@@ -2000,7 +2000,7 @@ def euler_problem_53(n=100, threshold=10**6):
     count = 0
     for m in range(1, n + 1):
         for k in range(0, m + 1):
-            if comb.n_choose_k(m, k) > threshold:
+            if comb.n_choose_k_count(m, k) > threshold:
                 count += 1
     return count
 
@@ -3724,7 +3724,7 @@ def euler_problem_90():
     https://projecteuler.net/problem=90
     for the original problem description.
     """
-    from subroutines import generate_digit_combinations as generate_cubes
+    from subroutines import generate_combinations_from_integer_range as generate_cubes
 
     """
     Idea: enumerate all the combinations on one cube.
@@ -3946,7 +3946,7 @@ def euler_problem_93():
     https://projecteuler.net/problem=93
     for the original problem description.
     """
-    from subroutines import generate_digit_combinations
+    from subroutines import generate_combinations_from_integer_range
 
     """
     Idea: compute all the combinations of four digits.
@@ -4011,7 +4011,7 @@ def euler_problem_93():
         return i - 1
 
     best_digits, best_value = None, 0
-    for _abcd in generate_digit_combinations(elements=4, low=1, high=9):
+    for _abcd in generate_combinations_from_integer_range(elements=4, low=1, high=9):
         _value = max_chain(*_abcd)
         if _value > best_value:
             best_digits = _abcd

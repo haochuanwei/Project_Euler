@@ -4,6 +4,8 @@ Subroutines that may get used repeatedly across different problems.
 # pylint: disable=line-too-long, bad-whitespace
 import wrappy
 from tqdm import tqdm
+from functools import lru_cache
+from collections import defaultdict
 
 
 def least_divisor(num, floor=2):
@@ -44,7 +46,7 @@ class Factorizer:  # pylint: disable=too-few-public-methods
     This is intended to be efficient for repeated factorizations.
     """
 
-    def __init__(self, bound=10 ** 6):
+    def __init__(self, bound=10**6):
         """
         Initialize a cache of factorizations and precompute primes.
         bound -- the bound of numbers that the factorizer is expected to deal with.
@@ -68,8 +70,9 @@ class Factorizer:  # pylint: disable=too-few-public-methods
         Update the list and set of primes, up to some bound.
         """
         from math import ceil, sqrt
+
         # we only need primes up to sqrt(bound) because if none of those primes divide a number under bound, then bound must be prime
-        if hasattr(self, 'list_primes') and self.list_primes[-1] ** 2 > self.bound:
+        if hasattr(self, "list_primes") and self.list_primes[-1] ** 2 > self.bound:
             return
         self.list_primes = all_primes_under(ceil(sqrt(self.bound)))
         self.set_primes = set(self.list_primes)
@@ -140,7 +143,9 @@ def get_all_divisors(factorization):
     """
     divisors = [1]
     for _base, _power in factorization.items():
-        divisors = [_div * (_base ** _p) for _p in range(0, _power + 1) for _div in divisors]
+        divisors = [
+            _div * (_base**_p) for _p in range(0, _power + 1) for _div in divisors
+        ]
     return divisors
 
 
@@ -151,9 +156,9 @@ def get_sum_proper_divisors(factorization):
     sum_divisors = 1
     original_number = 1
     for _base, _power in factorization.items():
-        factors = [_base ** k for k in range(0, _power + 1)]
+        factors = [_base**k for k in range(0, _power + 1)]
         sum_divisors *= sum(factors)
-        original_number *= _base ** _power
+        original_number *= _base**_power
     return sum_divisors - original_number
 
 
@@ -184,7 +189,7 @@ class DigitwiseInteger:
         """
         retval = 0
         for _digit, _value in self.order_dict.items():
-            retval += _value * (10 ** _digit)
+            retval += _value * (10**_digit)
         return retval
 
     def __consistency_check(self):
@@ -291,7 +296,7 @@ def all_primes_under(bound):
 
     # use a list for keeping primes in ascending order
     cache_primes = []
-    for candidate in tqdm(range(2, bound), desc=f'Calculating primes under {bound}'):
+    for candidate in tqdm(range(2, bound), desc=f"Calculating primes under {bound}"):
         is_prime_with_cache(candidate, cache_primes)
     return cache_primes[:]
 
@@ -383,7 +388,7 @@ def get_squares(num):
     """
     Get the first n triangular numbers.
     """
-    return [int(i ** 2) for i in range(1, num + 1)]
+    return [int(i**2) for i in range(1, num + 1)]
 
 
 def get_pentagonals(num):
@@ -715,7 +720,7 @@ class CliqueFinder:  # pylint: disable=too-few-public-methods
                 degree = defaultdict(int)
                 for i in _clique:
                     for j in self.adjacency_list[i]:
-                        if not j in _clique_set:
+                        if j not in _clique_set:
                             degree[j] += 1
                 for _key in degree.keys():
                     if degree[_key] == len(_clique):
@@ -782,7 +787,7 @@ def max_sum_path_in_triangle(arr, row_idx=-1):
     return max(points[row_idx])
 
 
-def continued_fraction_representation(num, max_terms=10 ** 5, check_loop_length=30):
+def continued_fraction_representation(num, max_terms=10**5, check_loop_length=30):
     """
     Warning: this implementation gets numerically unstable for long sequences.
     Given a positive Decimal b > 1, represent it as a sequence of integers {a_n}, such that
@@ -871,7 +876,7 @@ def solve_pells_equation(coeff_n):
             cache.pop(0)
         cache.append(_frac)
         # check the fraction
-        target = _frac.numerator ** 2 - coeff_n * _frac.denominator ** 2
+        target = _frac.numerator**2 - coeff_n * _frac.denominator**2
         if target == 1:
             return (_frac.numerator, _frac.denominator)
     return (-1, -1)
@@ -1184,10 +1189,10 @@ def DFS_TS(adjacency_list):
 
 
 def reverse_adj_list(adjacency_list):
-    '''
+    """
     Reverse an adjacency list.
     This is only relevant for directed graphs. For undirected graphs, the reverse is just the same as the original.
-    '''
+    """
     # determine the number of vertices
     n = len(adjacency_list)
     # initialzie the adjacency list to be returned
@@ -1203,10 +1208,10 @@ def reverse_adj_list(adjacency_list):
 
 
 def DFS_SCC_subroutine(adjacency_list, explored, comp, s):
-    '''
+    """
     Subroutine called by DFS_SCC() to determine strongly connected components from node i.
     Designed to be non-recursive so that large graphs don't crash the stack.
-    '''
+    """
     i = s.pop()
     if not bool(explored[i]):
         # mark node as explored
@@ -1218,12 +1223,13 @@ def DFS_SCC_subroutine(adjacency_list, explored, comp, s):
         if not bool(explored[j]):
             s.append(j)
 
+
 def DFS_SCC(adjacency_list):
-    '''
+    """
     Compute the strongly connected components of a graph.
     This implements Kosaraju's two-pass DFS algorithm.
     Designed to be non-recursive so that large graphs don't crash the stack.
-    '''
+    """
     # determine the number of nodes
     n = len(adjacency_list)
     # compute the reversed graph
@@ -1246,6 +1252,42 @@ def DFS_SCC(adjacency_list):
             # add SCC to the list
             components.append(comp)
     return components
+
+
+def prim_mst(adj_list):
+    """
+    Prim's minimum spanning tree algorithm.
+    Assumes that the graph is connected so a MST exists.
+    """
+    from datastruct import Heap
+
+    minheap = Heap([])
+    spanned = set()
+
+    if len(adj_list) < 2:
+        return []
+
+    def span(i):
+        if i in spanned:
+            return False
+
+        spanned.add(i)
+        for j, _cost in adj_list[i]:
+            if j in spanned:
+                continue
+            minheap.insert((_cost, i, j))
+        return True
+
+    mst = []
+    span(0)
+    while minheap.values:
+        _cost, i, j = minheap.extract()
+        if span(j):
+            mst.append((_cost, i, j))
+    assert (
+        len(mst) == len(adj_list) - 1
+    ), "Mininum spanning tree should contain edges 1 fewer than the number of nodes"
+    return mst
 
 
 @wrappy.memoize(cache_limit=100000)
@@ -1300,7 +1342,9 @@ def num_desc_prime_seq_given_total_and_head(total, head, list_of_primes, set_of_
     return num_seq
 
 
-def pythagorean_triplets(bound, ratio_lower_bound=0.0, ratio_upper_bound=1.0, coprime=True):
+def pythagorean_triplets(
+    bound, ratio_lower_bound=0.0, ratio_upper_bound=1.0, coprime=True
+):
     """
     Generates coprime Pythagorean triplets where the greatest of the triplet is under some bound, and the generating (n, m) pairs are also optionally bounded.
     """
@@ -1316,10 +1360,10 @@ def pythagorean_triplets(bound, ratio_lower_bound=0.0, ratio_upper_bound=1.0, co
         _n_lower = max(1, floor(ratio_lower_bound * _m))
         for _n in range(_n_lower, _n_upper):
             # calculate Pythagorean triplet
-            term_a = _m ** 2 - _n ** 2
+            term_a = _m**2 - _n**2
             term_b = 2 * _m * _n
-            term_c = _m ** 2 + _n ** 2
-            
+            term_c = _m**2 + _n**2
+
             if coprime:
                 # skip triplets that are not coprime
                 a_factors = fac.factorize(term_a)
@@ -1337,59 +1381,197 @@ def pythagorean_triplets(bound, ratio_lower_bound=0.0, ratio_upper_bound=1.0, co
     return triplets
 
 
-def generate_digit_combinations(elements=6, low=0, high=9):
-    '''
-    Recursive approach to generate distinct digit combinations.
+def generate_combinations_from_integer_range(elements=6, low=0, high=9):
+    """
+    Recursive approach to generate distinct integer combinations.
     Combinations are always in ascending order.
-    '''
+    """
     eff_high = high + 1 - elements
     if elements == 1:
-        for _value in range(low, eff_high+1):
+        for _value in range(low, eff_high + 1):
             yield [_value]
     else:
-        for _value in range(low, eff_high+1):
-            for _cube in generate_digit_combinations(
-                elements=elements-1,
-                low=_value+1,
+        for _value in range(low, eff_high + 1):
+            for _arr in generate_combinations_from_integer_range(
+                elements=elements - 1,
+                low=_value + 1,
                 high=high,
             ):
-                yield [_value, *_cube]
+                yield [_value, *_arr]
 
 
 class IntegerModulos(object):
-    '''
+    """
     Integer in a modulos space.
-    '''
+    """
+
     def __init__(self, value, modulos):
         assert isinstance(value, int)
         assert isinstance(modulos, int)
         self.__value = value
         self.__modulos = modulos
         self._reset()
-        
+
     def _reset(self):
         self.__value = self.__value % self.__modulos
-        
+
     def __add__(self, num):
         assert isinstance(num, int)
         retval = IntegerModulos(self.__value + num, self.__modulos)
         return retval
-    
+
     def __sub__(self, num):
         assert isinstance(num, int)
         retval = IntegerModulos(self.__value - num, self.__modulos)
         return retval
-    
+
     def __mul__(self, num):
         assert isinstance(num, int)
         retval = IntegerModulos(self.__value * num, self.__modulos)
         return retval
-        
+
     def value(self):
         return self.__value
-    
+
     def __repr__(self):
         return self.__value.__repr__()
-    
+
     def __str__(self):
         return self.__value.__str__()
+
+
+@lru_cache(maxsize=int(1e6))
+def subset_sums(set_as_sorted_tuple):
+    if not set_as_sorted_tuple:
+        return {tuple([]): 0}
+
+    arr = set_as_sorted_tuple
+    if len(arr) == 1:
+        return {tuple([]): 0, tuple(arr): sum(arr)}
+
+    subsolution = subset_sums(arr[:-1])
+    solution = subsolution.copy()
+    for _tuple, _sum in subsolution.items():
+        _new_tuple = tuple([*_tuple, arr[-1]])
+        _new_sum = _sum + arr[-1]
+        solution[_new_tuple] = _new_sum
+
+    return solution
+
+
+def nonempty_subset_sums(set_as_sorted_tuple):
+    solution = subset_sums(set_as_sorted_tuple).copy()
+    solution.pop(tuple([]))
+    return solution
+
+
+def is_special_sum_set(set_as_sorted_tuple, verbose=False):
+    """
+    Check if a set, represented as a sorted typle, is a special sum set.
+    Any set A is a special sum set iff for any non-empty disjoint subsets B and C
+    - S(B) != S(C)
+    - If B contains more elements than C then S(B) > S(C)
+    """
+    # basic set check: no duplicates
+    if len(set_as_sorted_tuple) != len(set(set_as_sorted_tuple)):
+        return False
+
+    # compute all the sums of non-empty subsets
+    # note that we do not need to check for disjointness because
+    # any common elements between B and C has no effect on the
+    # comparison between either S(B) vs. S(C) or len(B) vs. len(C)
+    subset_to_sum = nonempty_subset_sums(set_as_sorted_tuple)
+
+    sums = set()
+    size_to_sums = defaultdict(set)
+
+    for _tuple, _sum in subset_to_sum.items():
+        if _sum in sums:
+            return False
+        sums.add(_sum)
+        size_to_sums[len(_tuple)].add(_sum)
+
+    max_sum = 0
+    for _size in sorted(size_to_sums.keys()):
+        _sumset = size_to_sums[_size]
+        if min(_sumset) <= max_sum:
+            return False
+        max_sum = max(_sumset)
+        if verbose:
+            print(_size, max_sum, _sumset)
+    return True
+
+
+def disjoint_subset_pairs_count_by_sizes(parent_size, nonempty=True):
+    comb = Combination()
+    pairs_by_sizes = {}
+    for i in range(1 if nonempty else 0, (parent_size // 2) + 1):
+        for j in range(i, parent_size - i + 1):
+            _sizes = (i, j)
+            _count = comb.n_choose_k(parent_size, i + j) * comb.n_choose_k(i + j, i)
+            if i == j:
+                # eliminate double-counting which happens when the pair has the same size
+                assert _count % 2 == 0
+                _count //= 2
+            pairs_by_sizes[_sizes] = _count
+    return pairs_by_sizes
+
+
+def block_tiling_flexible_1d(m, n):
+    """
+    Compute the number of ways to tile n black blocks with red paint.
+    Each group of red paint must cover at least m consecutive blocks.
+    """
+    end_in_red = [*[0 for _ in range(m - 1)], 1]
+    end_in_black = [1 for _ in range(m)]
+
+    for i in range(m, n):
+        _reds = end_in_red[i - 1] + end_in_black[i - m]
+        _blacks = end_in_red[i - 1] + end_in_black[i - 1]
+        end_in_red.append(_reds)
+        end_in_black.append(_blacks)
+
+    return end_in_red, end_in_black
+
+
+def block_tiling_fixed_1d(m, n):
+    """
+    Compute the number of ways to tile n black blocks with red paint.
+    Each group of red paint must cover exactly m consecutive blocks.
+    """
+    end_in_red_end = [*[0 for _ in range(m - 1)], 1]
+    end_in_black = [1 for _ in range(m)]
+
+    for i in range(m, n):
+        _reds = end_in_red_end[i - m] + end_in_black[i - m]
+        _blacks = end_in_red_end[i - 1] + end_in_black[i - 1]
+        end_in_red_end.append(_reds)
+        end_in_black.append(_blacks)
+
+    return end_in_red_end, end_in_black
+
+
+def block_tiling_multifixed_1d(m_values, n):
+    """
+    Compute the number of ways to tile n black blocks with red paint.
+    Each group of red paint must cover exactly m consecutive blocks where m has multiple choices.
+    """
+    m_values = sorted(m_values)
+    m_min = m_values[0]
+    end_in_red_end = [*[0 for _ in range(m_min - 1)], 1]
+    end_in_black = [1 for _ in range(m_min)]
+
+    for i in range(m_min, n):
+        _reds, _blacks = 0, 0
+        for _m in m_values:
+            if i < _m - 1:
+                pass
+            elif i == _m - 1:
+                _reds += 1
+            else:
+                _reds += end_in_red_end[i - _m] + end_in_black[i - _m]
+        _blacks = end_in_red_end[i - 1] + end_in_black[i - 1]
+        end_in_red_end.append(_reds)
+        end_in_black.append(_blacks)
+
+    return end_in_red_end, end_in_black

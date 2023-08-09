@@ -6,8 +6,6 @@ Solutions to the second hundred problems of Project Euler.
 
 import wrappy
 from tqdm import tqdm
-from functools import lru_cache
-from collections import defaultdict
 
 
 @wrappy.probe()
@@ -89,61 +87,7 @@ def euler_problem_103():
     """
     https://projecteuler.net/problem=103
     """
-
-    @lru_cache(maxsize=int(1e6))
-    def subset_sums(set_as_sorted_tuple):
-        if not set_as_sorted_tuple:
-            return {tuple([]): 0}
-
-        arr = set_as_sorted_tuple
-        if len(arr) == 1:
-            return {tuple([]): 0, tuple(arr): sum(arr)}
-
-        subsolution = subset_sums(arr[:-1])
-        solution = subsolution.copy()
-        for _tuple, _sum in subsolution.items():
-            _new_tuple = tuple([*_tuple, arr[-1]])
-            _new_sum = _sum + arr[-1]
-            solution[_new_tuple] = _new_sum
-
-        return solution
-
-    def nonempty_subset_sums(set_as_sorted_tuple):
-        solution = subset_sums(set_as_sorted_tuple).copy()
-        keys_to_pop = []
-        for _key in solution.keys():
-            if len(_key) < 1:
-                keys_to_pop.append(_key)
-
-        for _key in keys_to_pop:
-            solution.pop(_key)
-        return solution
-
-    def is_special_sum_set(set_as_sorted_tuple, verbose=False):
-        # basic set check: no duplicates
-        if len(set_as_sorted_tuple) != len(set(set_as_sorted_tuple)):
-            return False
-
-        subset_to_sum = nonempty_subset_sums(set_as_sorted_tuple)
-
-        sums = set()
-        size_to_sums = defaultdict(set)
-
-        for _tuple, _sum in subset_to_sum.items():
-            if _sum in sums:
-                return False
-            sums.add(_sum)
-            size_to_sums[len(_tuple)].add(_sum)
-
-        max_sum = 0
-        for _size in sorted(size_to_sums.keys()):
-            _sumset = size_to_sums[_size]
-            if min(_sumset) <= max_sum:
-                return False
-            max_sum = max(_sumset)
-            if verbose:
-                print(_size, max_sum, _sumset)
-        return True
+    from subroutines import is_special_sum_set
 
     informed_guess = [20, *[20 + _ for _ in [11, 18, 19, 20, 22, 25]]]
 
@@ -249,3 +193,227 @@ def euler_problem_104(bound=1000000, approx_thresh=500, verbose=False):
                 print(f"{k}th Fibonacci number ends pandigitally")
         if begin_flag and end_flag:
             return k
+
+
+@wrappy.probe()
+def euler_problem_105():
+    """
+    https://projecteuler.net/problem=105
+    """
+    from subroutines import is_special_sum_set
+
+    with open("attachments/p105_sets.txt", "r") as f:
+        lines = [_ for _ in f.read().split("\n") if len(_) > 0]
+        tuples = [tuple(sorted(set((map(int, _.split(",")))))) for _ in lines]
+
+    total = sum([sum(_t) for _t in tqdm(tuples) if is_special_sum_set(_t)])
+    return total
+
+
+@wrappy.probe()
+def euler_problem_106(n=12):
+    """
+    https://projecteuler.net/problem=106
+    """
+    from subroutines import Combination
+
+    """
+    Idea: the two subsets only need to be tested for equality when
+    (1) they have the same number of elements
+    (2) elements in one set are not pairwise greater to those in the other set
+
+    The flip side of (2), where pairwise comparison works, is equivalent to
+    walking down a grid from top left to bottom right without crossing the diagonal.
+    """
+    comb = Combination()
+
+    def grid_walk(k):
+        if k < 2:
+            return 1
+
+        arr = [1] * (k + 1)
+
+        for _ in range(k):
+            next_arr = [0] * (len(arr) - 1)
+            next_arr[0] = arr[1]
+            for i in range(1, len(next_arr)):
+                next_arr[i] = next_arr[i - 1] + arr[i + 1]
+            arr = next_arr
+        return arr[-1]
+
+    num_pairs_to_check = 0
+    for i in range(1, (n // 2) + 1):
+        _num_selections = comb.n_choose_k(n, 2 * i)
+        _num_subselections = comb.n_choose_k(2 * i, i) // 2
+        _num_subselections_to_check = _num_subselections - grid_walk(i)
+        num_pairs_to_check += _num_selections * _num_subselections_to_check
+    return num_pairs_to_check
+
+
+@wrappy.probe()
+def euler_problem_107():
+    """
+    https://projecteuler.net/problem=107
+    """
+    from subroutines import prim_mst
+
+    with open("attachments/p107_network.txt", "r") as f:
+        lines = [_ for _ in f.read().split("\n") if len(_) > 0]
+        adj_list = [
+            [(i, int(_)) for i, _ in enumerate(_line.split(",")) if _ != "-"]
+            for _line in lines
+        ]
+
+    # note that the graph is undirected -> divide cost by 2 due to doublecounting
+    full_cost = sum([sum([_[1] for _ in _adj]) for _adj in adj_list]) // 2
+    mst = prim_mst(adj_list)
+    mst_cost = sum([_[0] for _ in mst])
+    return full_cost - mst_cost
+
+
+@wrappy.probe()
+def euler_problem_108(thresh=1000, prime_bound=int(1e3)):
+    """
+    https://projecteuler.net/problem=108
+    """
+    from subroutines import (
+        all_primes_under,
+        get_num_divisors,
+        restore_from_factorization,
+    )
+    from datastruct import Heap
+    from math import log10, sqrt
+    from collections import defaultdict
+
+    """
+    Idea: without loss of generality, assume x <= y. So n < x <= y.
+    Since 1/(2n) + 1/(2n) = 1/n, we have x <= 2n.
+    1/x + 1/y = 1/n
+    => yn + xn = xy
+    => yn + xn - xy = 0
+    => (n - x)(n - y) = n^2
+    => (x - n)(y - n) = n^2
+    So x can be any divisor of n^2 up to n. That is half the divisors other than n, and n itself.
+    """
+    sq_thresh = thresh * 2 - 1
+    primes = all_primes_under(prime_bound)
+    log_sq_thresh = log10(sq_thresh)
+
+    heap = Heap([(log10(3) / log10(_p**2), _p, 2) for _p in primes], minheap=False)
+
+    log_accumulated = 0
+    factors = defaultdict(int)
+    while log_accumulated < log_sq_thresh:
+        _effi, _prime, _order = heap.extract()
+        _incre = _effi * log10(_prime**2)
+        log_accumulated += _incre
+        factors[_prime] += 2
+        heap.insert(
+            (
+                (log10(_order + 3) - log10(_order + 1)) / (log10(_prime**2)),
+                _prime,
+                _order + 2,
+            )
+        )
+    primes_to_consider = [_p for _p in primes if _p <= max(factors.keys())]
+    print(restore_from_factorization(factors), factors, get_num_divisors(factors))
+
+    def search(guess_factorization, low=-2, high=2):
+        def subroutine(factorization, perturb_idx):
+            perturb_prime = primes_to_consider[perturb_idx]
+            best_value = None
+            best_factorization = None
+            for _diff in range(low, high + 1, 2):
+                if factorization[perturb_prime] + _diff < 0:
+                    continue
+                factorization[perturb_prime] += _diff
+
+                if get_num_divisors(factorization) > sq_thresh:
+                    _value = restore_from_factorization(factorization)
+                    if best_value is None or _value < best_value:
+                        best_value = _value
+                        best_factorization = factorization.copy()
+
+                if perturb_idx < len(primes_to_consider) - 1:
+                    _value, _fac = subroutine(
+                        factorization, perturb_idx=perturb_idx + 1
+                    )
+                    if _value is not None and (
+                        best_value is None or _value < best_value
+                    ):
+                        best_value = _value
+                        best_factorization = _fac.copy()
+
+                factorization[perturb_prime] -= _diff
+            return best_value, best_factorization
+
+        return subroutine(guess_factorization, 0)
+
+    best_value, factors = search(factors)
+    return int(sqrt(best_value)), factors, get_num_divisors(factors)
+
+
+@wrappy.probe()
+def euler_problem_110(thresh=4000000, prime_bound=int(1e3)):
+    """
+    https://projecteuler.net/problem=110
+    """
+    # exact same method as problem 108
+    return euler_problem_108(thresh=thresh, prime_bound=prime_bound)
+
+
+@wrappy.probe()
+def euler_problem_114(m=3, n=50):
+    """
+    https://projecteuler.net/problem=114
+    """
+    """
+    Idea: this is classic dynamic programming.
+    Subproblem arrangements can end in a red or black block.
+    We then attach red or black blocks in the next unit.
+    Red blocks can only happen in groups of m=3, so look 3 units behind for a black end.
+    """
+    from subroutines import block_tiling_flexible_1d
+
+    end_in_red, end_in_black = block_tiling_flexible_1d(m, n)
+    return end_in_red[-1] + end_in_black[-1]
+
+
+@wrappy.probe()
+def euler_problem_115(m=50, n_guess=200, target=int(1e6)):
+    """
+    https://projecteuler.net/problem=115
+    """
+    from subroutines import block_tiling_flexible_1d
+
+    end_in_red, end_in_black = block_tiling_flexible_1d(m, n_guess)
+
+    for i in range(n_guess):
+        if end_in_red[i] + end_in_black[i] > target:
+            return i + 1
+
+
+@wrappy.probe()
+def euler_problem_116(m_values=(2, 3, 4), n=50):
+    """
+    https://projecteuler.net/problem=116
+    """
+    from subroutines import block_tiling_fixed_1d
+
+    total = 0
+    for _m in m_values:
+        # un-count the all-black tiling
+        _end_in_red, _end_in_black = block_tiling_fixed_1d(_m, n)
+        total += _end_in_red[-1] + _end_in_black[-1] - 1
+    return total
+
+
+@wrappy.probe()
+def euler_problem_117(m_values=(2, 3, 4), n=50):
+    """
+    https://projecteuler.net/problem=117
+    """
+    from subroutines import block_tiling_multifixed_1d
+
+    end_in_red, end_in_black = block_tiling_multifixed_1d(m_values, n)
+    return end_in_red[-1] + end_in_black[-1]
