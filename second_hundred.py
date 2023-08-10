@@ -363,6 +363,55 @@ def euler_problem_110(thresh=4000000, prime_bound=int(1e3)):
 
 
 @wrappy.probe()
+def euler_problem_112(target=0.99):
+    """
+    https://projecteuler.net/problem=112
+    """
+    from subroutines import BouncyNumberHelper
+
+    numer, denom = 0, 99
+    for _digits in range(3, 10):
+        for _first in range(1, 10):
+            _numer_inc = BouncyNumberHelper.bouncy_numbers_given_num_digits_and_first(
+                _digits, _first
+            )
+            _denom_inc = 10 ** (_digits - 1)
+            if (numer + _numer_inc) / (denom + _denom_inc) > target:
+                _start = _first * 10 ** (_digits - 1)
+                _end = (_first + 1) * 10 ** (_digits - 1)
+                for _num in range(_start, _end):
+                    if BouncyNumberHelper.is_bouncy(_num):
+                        numer += 1
+                    denom += 1
+                    if numer / denom >= target:
+                        return _num
+                raise ValueError(f"Expected target number between {_start} and {_end}")
+            else:
+                numer += _numer_inc
+                denom += _denom_inc
+
+    return None
+
+
+@wrappy.probe()
+def euler_problem_113(digit_limit=100):
+    """
+    https://projecteuler.net/problem=113
+    """
+    from subroutines import BouncyNumberHelper
+
+    total = 99
+    for _digits in range(3, digit_limit + 1):
+        for _first in range(1, 10):
+            total += 10 ** (_digits - 1)
+            total -= BouncyNumberHelper.bouncy_numbers_given_num_digits_and_first(
+                _digits, _first
+            )
+
+    return total
+
+
+@wrappy.probe()
 def euler_problem_114(m=3, n=50):
     """
     https://projecteuler.net/problem=114

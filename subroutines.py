@@ -1575,3 +1575,37 @@ def block_tiling_multifixed_1d(m_values, n):
         end_in_black.append(_blacks)
 
     return end_in_red_end, end_in_black
+
+
+class BouncyNumberHelper:
+    COMBINATION = Combination()
+
+    @staticmethod
+    def monotone_numbers_given_num_digits_and_first(num_digits, first, increasing=True):
+        assert first != 0
+        slots = 10 - first if increasing else first + 1
+        picks = num_digits - 1
+        return BouncyNumberHelper.COMBINATION.n_choose_k(slots + picks - 1, picks)
+
+    @staticmethod
+    def bouncy_numbers_given_num_digits_and_first(num_digits, first):
+        assert first != 0
+        total = 10 ** (num_digits - 1)
+        increasing = BouncyNumberHelper.monotone_numbers_given_num_digits_and_first(
+            num_digits, first, increasing=True
+        )
+        decreasing = BouncyNumberHelper.monotone_numbers_given_num_digits_and_first(
+            num_digits, first, increasing=False
+        )
+        # exactly 1 double-counting between increasing and decreasing, which is "flat"
+        bouncy = total - increasing - decreasing + 1
+        return bouncy
+
+    @staticmethod
+    def is_bouncy(num):
+        chars = list(str(num))
+        if sorted(chars) == chars:
+            return False
+        if sorted(chars, reverse=True) == chars:
+            return False
+        return True
