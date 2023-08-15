@@ -466,3 +466,146 @@ def euler_problem_117(m_values=(2, 3, 4), n=50):
 
     end_in_red, end_in_black = block_tiling_multifixed_1d(m_values, n)
     return end_in_red[-1] + end_in_black[-1]
+
+
+@wrappy.probe()
+def euler_problem_118(all_digits="123456789"):
+    """
+    https://projecteuler.net/problem=118
+    """
+    """
+    Idea: use two lookups using sorted digits as the key, e.g. '12359'.
+    (1) digits-to-primes lookup for finding prime candidiates.
+    (2) digits-to-sets lookup for finding subsolutions.
+    We represent each solution as comma-separated sorted array to deduplicate.
+    For example, {2, 47, 5, 89, 631} -> '2,5,47,89,631'
+    """
+    from collections import defaultdict
+    from subroutines import (
+        all_primes_under,
+        is_prime_given_primes,
+        generate_all_partitions_from_list,
+        permutations_from_list,
+    )
+
+    all_digits = "".join(sorted(list(all_digits)))
+    basic_primes = all_primes_under(32 * int(1e3))
+    digits_to_primes = defaultdict(list)
+    for _l, _ in tqdm(
+        generate_all_partitions_from_list(list(all_digits)),
+        total=int(2 ** len(all_digits)),
+    ):
+        _key = "".join(sorted(_l))
+        for _larr in permutations_from_list(_l):
+            if not _larr:
+                continue
+            _lnum = int("".join(_larr))
+            if _lnum < 2:
+                continue
+            if is_prime_given_primes(_lnum, basic_primes):
+                digits_to_primes[_key].append(_lnum)
+
+    digits_to_solutions = defaultdict(set)
+
+    def subsolutions(digits):
+        # repeated case: lookup
+        if digits in digits_to_solutions:
+            return digits_to_solutions[digits]
+
+        # base case: 1 digit only, no partition needed
+        if len(digits) == 1:
+            digits_to_solutions[digits] = [str(_p) for _p in digits_to_primes[digits]]
+            return digits_to_solutions[digits]
+
+        solutions = set()
+        # recursive case: partition to two groups
+        for _l, _r in generate_all_partitions_from_list(list(digits)):
+            _l, _r = "".join(_l), "".join(_r)
+            if not _r:
+                continue
+            if not _l:
+                for _rp in digits_to_primes[_r]:
+                    solutions.add(str(_rp))
+            # left group looks for subsolution
+            for _lsol in subsolutions(_l):
+                _larr = list(map(int, _lsol.split(",")))
+                # right group looks for primes
+                for _rp in digits_to_primes[_r]:
+                    _sol = sorted([*_larr, _rp])
+                    solutions.add(",".join(map(str, _sol)))
+
+        digits_to_solutions[digits] = solutions
+        return digits_to_solutions[digits]
+
+    return subsolutions(all_digits)
+
+
+@wrappy.probe()
+def euler_problem_119(target_idx=30, base_bound=500, power_bound=20):
+    """
+    https://projecteuler.net/problem=119
+    """
+    """
+    Idea: just try combinations of base numbers and powers.
+    Note that if a number has more digits than the base number,
+    it is very unlikely for the digits to sum up to the base.
+    """
+    # get as many qualified numbers as target_idx
+    # so the maximum so far is an upper bound of the target number
+    qualified = []
+
+    for _b in range(1, base_bound + 1):
+        for _p in range(2, power_bound + 1):
+            _num = _b**_p
+            if _num < 10:
+                continue
+            _sum = sum(list(map(int, list(str(_num)))))
+            if _sum == _b:
+                qualified.append(_num)
+
+    # try bases and powers up to the target number
+    # note that the base is at most 9 * number_of_digits
+    num_limit = sorted(qualified)[target_idx - 1]
+    base_limit = len(str(num_limit)) * 9
+    qualified.clear()
+
+    for _b in tqdm(range(2, base_limit + 1)):
+        _p = 1
+        while True:
+            _p += 1
+            _num = _b**_p
+            if _num < 10:
+                continue
+            if _num > num_limit:
+                break
+            _sum = sum(list(map(int, list(str(_num)))))
+            if _sum == _b:
+                qualified.append((_num, _b, _p))
+
+    return sorted(qualified)
+
+
+@wrappy.probe()
+def euler_problem_145(bound=int(1e9)):
+    """
+    https://projecteuler.net/problem=145
+    """
+
+    def all_odd_digits(num):
+        digits = set(str(num))
+        for _d in ["0", "2", "4", "6", "8"]:
+            if _d in digits:
+                return False
+        return True
+
+    def reverse(num):
+        return int(str(num)[::-1])
+
+    reversible_count = 0
+    for _num in tqdm(range(1, bound)):
+        if _num % 10 == 0:
+            continue
+        if all_odd_digits(_num + reverse(_num)):
+            reversible_count += 1
+
+    return reversible_count

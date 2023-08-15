@@ -264,6 +264,7 @@ def is_prime_given_primes(num, primes):
     """
     from math import floor, sqrt
 
+    assert isinstance(num, int) and num >= 2
     assert primes[-1] >= floor(sqrt(num))
     for _p in primes:
         if _p > floor(sqrt(num)):
@@ -375,6 +376,22 @@ def permutations_m_to_n_str(bound_m, bound_n):
     for _d in range(bound_m, bound_n + 1):
         permutations = add(permutations, str(_d))
     return permutations
+
+
+def permutations_from_list(arr):
+    """
+    Get all permutations of array elements.
+    Example:
+    permutations_from_list([1, 2, 3]) -> [1, 2, 3], [1, 3, 2], [2, 1, 3], ...
+    """
+    if not arr:
+        yield []
+    elif len(arr) == 1:
+        yield arr
+    else:
+        for _ in permutations_from_list(arr[:-1]):
+            for i in range(0, len(_) + 1):
+                yield [*_[:i], arr[-1], *_[i:]]
 
 
 def get_triangulars(num):
@@ -1398,6 +1415,18 @@ def generate_combinations_from_integer_range(elements=6, low=0, high=9):
                 high=high,
             ):
                 yield [_value, *_arr]
+
+
+def generate_all_partitions_from_list(arr):
+    """
+    Recursive approach to generate array element partitions.
+    """
+    if len(arr) == 0:
+        yield [], []
+    else:
+        for _l, _r in generate_all_partitions_from_list(arr[:-1]):
+            yield [*_l, arr[-1]], _r
+            yield _l, [*_r, arr[-1]]
 
 
 class IntegerModulos(object):
