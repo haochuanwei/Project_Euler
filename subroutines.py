@@ -265,7 +265,9 @@ def is_prime_given_primes(num, primes):
     from math import floor, sqrt
 
     assert isinstance(num, int) and num >= 2
-    assert primes[-1] >= floor(sqrt(num))
+    assert primes[-1] >= floor(
+        sqrt(num)
+    ), f"Prime limit {primes[-1]} is insufficient for {num}"
     for _p in primes:
         if _p > floor(sqrt(num)):
             break
@@ -392,6 +394,22 @@ def permutations_from_list(arr):
         for _ in permutations_from_list(arr[:-1]):
             for i in range(0, len(_) + 1):
                 yield [*_[:i], arr[-1], *_[i:]]
+
+
+def permutations_by_insertion(start_arr, insert_arr):
+    """
+    Get all permutations of array elements, starting from a given partial permutation.
+    Example:
+    [1, 2, 3], [4, 5] -> [1, 2, 3, 4, 5], [1, 2, 3, 5, 4], [1, 2, 4, 3, 5], ...
+    where 1, 2, and 3 always show up in the original order.
+    """
+    assert start_arr
+    if not insert_arr:
+        yield start_arr[:]
+    else:
+        for _ in permutations_by_insertion(start_arr, insert_arr[:-1]):
+            for i in range(0, len(_) + 1):
+                yield [*_[:i], insert_arr[-1], *_[i:]]
 
 
 def get_triangulars(num):

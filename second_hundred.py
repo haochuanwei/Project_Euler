@@ -363,6 +363,64 @@ def euler_problem_110(thresh=4000000, prime_bound=int(1e3)):
 
 
 @wrappy.probe()
+def euler_problem_111(num_digits=10):
+    """
+    https://projecteuler.net/problem=111
+    """
+    """
+    Idea: pre-compute primes up to the square root of the maximal number.
+    For each d, start trying from the most repeats. Checking prime is cheap.
+    """
+    from subroutines import (
+        all_primes_under,
+        is_prime_given_primes,
+        permutations_by_insertion,
+    )
+
+    basic_primes = all_primes_under(int(2 * 10 ** (num_digits / 2)))
+
+    def generate_filler_digits(repeated_digit, num_to_generate):
+        assert isinstance(num_to_generate, int) and num_to_generate >= 0
+        assert isinstance(repeated_digit, int) and 0 <= repeated_digit <= 9
+        if num_to_generate == 0:
+            yield []
+        else:
+            for _digits in generate_filler_digits(repeated_digit, num_to_generate - 1):
+                for i in range(0, 10):
+                    if i == repeated_digit:
+                        continue
+                    else:
+                        yield [*_digits, i]
+
+    solutions = {}
+    for _d in range(0, 10):
+        for _M in range(num_digits - 1, 1, -1):
+            _base = [_d] * _M
+            _seen = set()
+            _qualified = set()
+            for _filler in generate_filler_digits(_d, num_digits - _M):
+                for _permu in permutations_by_insertion(_base[:], _filler):
+                    _num = int("".join(map(str, _permu)))
+                    # filter duplicates
+                    if _num in _seen:
+                        continue
+                    _seen.add(_num)
+                    # ignore numbers with leading 0 or already seen
+                    if len(str(_num)) < num_digits:
+                        continue
+                    if is_prime_given_primes(_num, basic_primes):
+                        _qualified.add(_num)
+            # terminate if found valid M value
+            if _qualified:
+                solutions[_d] = dict(
+                    M=_M, N=len(_qualified), S=sum(_qualified), primes=_qualified
+                )
+                break
+
+    return solutions
+
+
+@wrappy.probe()
 def euler_problem_112(target=0.99):
     """
     https://projecteuler.net/problem=112
@@ -586,26 +644,24 @@ def euler_problem_119(target_idx=30, base_bound=500, power_bound=20):
 
 
 @wrappy.probe()
-def euler_problem_145(bound=int(1e9)):
+def euler_problem_145(max_digits=9):
     """
     https://projecteuler.net/problem=145
     """
+    """
+    Idea: denote the digits as d1, d2, ..., dn.
+    Last digit of the sum is d1 + dn and must be odd.
+    This means exactly one between d1 and dn is odd.
 
-    def all_odd_digits(num):
-        digits = set(str(num))
-        for _d in ["0", "2", "4", "6", "8"]:
-            if _d in digits:
-                return False
-        return True
+    Let's call any digit sum > 10 an "advancement".
+    If n is even, no digit gets 2x.
+    There cannot be any advancement because the last digit must be (odd, even)
+    so the first digit (except a possible leading 1) cannot get any advancement.
 
-    def reverse(num):
-        return int(str(num)[::-1])
-
-    reversible_count = 0
-    for _num in tqdm(range(1, bound)):
-        if _num % 10 == 0:
-            continue
-        if all_odd_digits(_num + reverse(_num)):
-            reversible_count += 1
-
-    return reversible_count
+    If n is odd, n can only be 3.
+      E O X  E O
+      O E X  O E
+    1?O?O?2X?O?O
+    The 2X must get an advancement, but then it implies an advancement on the first digit after the possible leading 1.
+    So n = 3 and X = 0, 1, 2, 3, 4. The other two digits follow the (odd, even) rule and add to > 10.
+    """
