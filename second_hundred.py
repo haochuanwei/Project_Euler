@@ -660,12 +660,12 @@ def euler_problem_145(max_digits=9):
     There cannot be any advancement because the last digit must be (odd, even)
     so the first digit (except a possible leading 1) cannot get any advancement.
 
-    If n is odd, n can only be 3.
+    If n is odd, there will be a digit adding to itself. Let's call it X.
       E O X  E O
       O E X  O E
     1?O?O?2X?O?O
     The 2X must get an advancement, but then it implies an advancement on the first digit after the possible leading 1.
-    So n = 3 and X = 0, 1, 2, 3, 4. The other two digits follow the (odd, even) rule and add to > 10.
+    So for n=5 there are no reversible numbers. However there can be for n=7.
     """
 
     class C:
