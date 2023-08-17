@@ -648,6 +648,8 @@ def euler_problem_145(max_digits=9):
     """
     https://projecteuler.net/problem=145
     """
+    from subroutines import generate_combinations_from_element_wise_choices
+
     """
     Idea: denote the digits as d1, d2, ..., dn.
     Last digit of the sum is d1 + dn and must be odd.
@@ -665,3 +667,74 @@ def euler_problem_145(max_digits=9):
     The 2X must get an advancement, but then it implies an advancement on the first digit after the possible leading 1.
     So n = 3 and X = 0, 1, 2, 3, 4. The other two digits follow the (odd, even) rule and add to > 10.
     """
+
+    class C:
+        # each tuple: (code, combinations, odd, adv)
+        # with even: count by 0, 2, 4, 6, 8 in that order
+        # with odd only: count by 1, 3, 5, 7, 9 in that order
+        # (odd, even), no adv, last digit (no zero)
+        OEnl = ("OEnl", 0 + 4 + 3 + 2 + 1, 1, 0)
+        # (odd, even), adv, last digit (no zero)
+        OEal = ("OEal", 0 + 1 + 2 + 3 + 4, 1, 1)
+        # (odd, even), no adv, not last digit
+        # multiply by 2 for the (even, odd) exchange
+        OEn = ("OEn", 2 * (5 + 4 + 3 + 2 + 1), 1, 0)
+        # (odd, even), adv, not last digit
+        # multiply by 2 for the (even, odd) exchange
+        OEa = ("OEa", 2 * (0 + 1 + 2 + 3 + 4), 1, 1)
+        # (even, even), no adv, not last digit
+        EEn = ("EEn", 5 + 4 + 3 + 2 + 1, 0, 0)
+        # (even, even), adv, not last digit
+        EEa = ("EEa", 0 + 1 + 2 + 3 + 4, 0, 1)
+        # (odd, odd), no adv, not last digit
+        OOn = ("OOn", 4 + 3 + 2 + 1 + 0, 0, 0)
+        # (even, even), adv, not last digit
+        OOa = ("OOa", 1 + 2 + 3 + 4 + 5, 0, 1)
+        # (x, x), no adv: 0, 1, 2, 3, 4
+        XXn = ("XXn", 5, 0, 0)
+        # (x, x), adv: 5, 6, 7, 8, 9
+        XXa = ("XXa", 5, 0, 1)
+
+    def get_sequence_of_possibilities(num_digits):
+        num_nonx = num_digits // 2
+        at_x = [[C.XXn, C.XXa]] if num_digits % 2 == 1 else []
+        after_x = [
+            *[[C.OEn, C.OEa, C.EEn, C.EEa, C.OOn, C.OOa] for _ in range(num_nonx - 1)],
+            [C.OEnl, C.OEal],
+        ]
+        return [*at_x, *after_x]
+
+    def valid_combinations(sequence):
+        count = sequence[-1][1]
+        for i in range(len(sequence) - 1):
+            _step_count = sequence[i][1]
+            _odd = sequence[i][2]
+            _next_adv = sequence[i + 1][3]
+            if _odd and _next_adv:
+                return 0
+            elif not _odd and not _next_adv:
+                return 0
+            else:
+                count *= _step_count
+
+        # count twice for each pair
+        return count * 2
+
+    total = 0
+    for _num_digits in range(2, max_digits + 1):
+        _subtotal = 0
+        _seq_choices = get_sequence_of_possibilities(_num_digits)
+        for _half_seq in generate_combinations_from_element_wise_choices(_seq_choices):
+            _after_x_idx = 1 if _half_seq[0][0].startswith("XX") else 0
+            _before_x = [
+                tuple([_[0], 1, _[2], _[3]]) for _ in _half_seq[_after_x_idx:][::-1]
+            ]
+            _seq = [*_before_x, *_half_seq]
+
+            _seqtotal = valid_combinations(_seq)
+            if _seqtotal > 0:
+                print([_[0] for _ in _seq], _seqtotal)
+            _subtotal += _seqtotal
+        total += _subtotal
+        print(_num_digits, _subtotal)
+    return total

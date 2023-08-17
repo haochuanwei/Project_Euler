@@ -1416,6 +1416,20 @@ def pythagorean_triplets(
     return triplets
 
 
+def generate_combinations_from_element_wise_choices(list_choices):
+    assert list_choices
+    if len(list_choices) == 1:
+        assert isinstance(list_choices[0], list), "Expected a list"
+        for _ in list_choices[0]:
+            yield [_]
+    else:
+        for _ele in list_choices[0]:
+            for _seq in generate_combinations_from_element_wise_choices(
+                list_choices[1:]
+            ):
+                yield [_ele, *_seq]
+
+
 def generate_combinations_from_integer_range(elements=6, low=0, high=9):
     """
     Recursive approach to generate distinct integer combinations.
