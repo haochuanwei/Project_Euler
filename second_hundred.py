@@ -766,6 +766,25 @@ def euler_problem_123(thresh=int(1e10)):
 
 
 @wrappy.probe()
+def euler_problem_124(limit=100000, idx=10000):
+    """
+    https://projecteuler.net/problem=124
+    """
+    from subroutines import Factorizer
+
+    fac = Factorizer()
+
+    rad_n_arr = [(1, 1)]
+    for _n in range(2, limit + 1):
+        _rad = 1
+        for _p in fac.factorize(_n).keys():
+            _rad *= _p
+        rad_n_arr.append((_rad, _n))
+
+    return sorted(rad_n_arr)[idx - 1]
+
+
+@wrappy.probe()
 def euler_problem_145(max_digits=9):
     """
     https://projecteuler.net/problem=145
