@@ -785,6 +785,41 @@ def euler_problem_124(limit=100000, idx=10000):
 
 
 @wrappy.probe()
+def euler_problem_125(bound=int(1e8)):
+    """
+    https://projecteuler.net/problem=125
+    """
+    from math import ceil, sqrt
+    from subroutines import is_a_palindrome
+
+    """
+    Idea: it's easy to check for palindrome and there seems to be no
+    mathematical connection between palindromes and consecutive square sums.
+    So pre-compute cumulative sums to efficiently find consecutive ones.
+    """
+    base_bound = 2 * ceil(sqrt(bound))
+    squares = [_**2 for _ in range(0, base_bound + 1)]
+    cumulative_squares = squares[:]
+    for i in range(1, base_bound + 1):
+        cumulative_squares[i] += cumulative_squares[i - 1]
+
+    # some palindromes can be written as different sums!
+    # this means we need to handle double counting
+    palindrome_to_bases = {}
+    for i in tqdm(range(0, base_bound - 1)):
+        for j in range(i + 2, base_bound + 1):
+            _candidate = cumulative_squares[j] - cumulative_squares[i]
+            if _candidate > bound:
+                break
+            if is_a_palindrome(_candidate) and _candidate < bound:
+                if _candidate not in palindrome_to_bases:
+                    palindrome_to_bases[_candidate] = []
+                palindrome_to_bases[_candidate].append(list(range(i + 1, j + 1)))
+
+    return palindrome_to_bases
+
+
+@wrappy.probe()
 def euler_problem_145(max_digits=9):
     """
     https://projecteuler.net/problem=145
