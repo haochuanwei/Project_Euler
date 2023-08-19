@@ -644,6 +644,128 @@ def euler_problem_119(target_idx=30, base_bound=500, power_bound=20):
 
 
 @wrappy.probe()
+def euler_problem_120(low=3, high=1000):
+    """
+    https://projecteuler.net/problem=120
+    """
+    """
+    Idea: look into the pattern of (a - 1) ^ p and (a + 1) ^ p mod a ^ 2.
+    We can eliminate any 2nd order term on sight, i.e. it's at most 1st order.
+    Example:
+     p | (a-1)^p | (a+1)^p | (a-1)^p + (a+1)^p
+    ---|---------|---------|-------------------
+     1 |   a - 1 |   a + 1 | 2 (a)
+     2 | -2a + 1 |  2a + 1 | 2
+     3 |  3a - 1 |  3a + 1 | 2 (3a)
+     4 | -4a + 1 |  4a + 1 | 2
+    Note the 2 * (odd) multiplier before a. This series is 4n + 2, which implies
+    that the max remainder has to be (the greatest even number below a) times a.
+    This is because
+    - 4 is coprime to all odd numbers
+    - for a = 0 mod 4, 4n + 2 will reach a - 2.
+    - for a = 2 mod 4, 4n + 2 will reach 2a - 2.
+    """
+    total = 0
+    for _num in range(low, high + 1):
+        _max_l_even = _num - (2 if _num % 2 == 0 else 1)
+        total += _max_l_even * _num
+    return total
+
+
+@wrappy.probe()
+def euler_problem_121(num_turns=15):
+    """
+    https://projecteuler.net/problem=121
+    """
+    from math import floor
+    from subroutines import generate_combinations_from_integer_range, factorial
+
+    """
+    Idea: given n turns there can be up to (n - 1) // 2 reds.
+    Count the number of events given which turns got reds.
+    """
+    events_per_turn = [(i + 1) for i in range(1, num_turns + 1)]
+    total_events = factorial(num_turns + 1)
+
+    # pre-count the event of all blues
+    total_winning_events = 1
+    for _reds in range(1, (num_turns - 1) // 2 + 1):
+        for _arr in generate_combinations_from_integer_range(
+            elements=_reds, low=0, high=num_turns - 1
+        ):
+            _events = 1
+            for _idx in _arr:
+                _events *= events_per_turn[_idx] - 1
+            total_winning_events += _events
+
+    return floor(total_events / total_winning_events)
+
+
+@wrappy.probe()
+def euler_problem_122(max_order=200):
+    """
+    https://projecteuler.net/problem=122
+    """
+    """
+    Textbook dynamic programming except that subproblem solutions need to
+    account for all exponents involved in multiplications.
+    """
+    solution = [None] * (max_order + 1)
+    solution[:3] = [[set()], [set()], [{2}]]
+    for _k in tqdm(range(3, max_order + 1)):
+        _min_muls = []
+        for _m in range(1, (_k // 2) + 1):
+            for _mul_set_l in solution[_m]:
+                for _mul_set_r in solution[_k - _m]:
+                    _mul_set = {_k}
+                    _mul_set.update(_mul_set_l)
+                    _mul_set.update(_mul_set_r)
+
+                    if not _min_muls:
+                        _min_muls.append(_mul_set)
+                    elif len(_mul_set) == len(_min_muls[0]):
+                        _min_muls.append(_mul_set)
+                    elif len(_mul_set) < len(_min_muls[0]):
+                        _min_muls.clear()
+                        _min_muls.append(_mul_set)
+        solution[_k] = _min_muls
+
+    return solution[1 : (max_order + 1)]
+
+
+@wrappy.probe()
+def euler_problem_123(thresh=int(1e10)):
+    """
+    https://projecteuler.net/problem=123
+    """
+    from math import sqrt
+    from subroutines import all_primes_under
+
+    """
+    Idea: look into the pattern of (a - 1) ^ p and (a + 1) ^ p mod a ^ 2.
+    We can eliminate any 2nd order term on sight, i.e. it's at most 1st order.
+    Example:
+     p | (a-1)^p | (a+1)^p | (a-1)^p + (a+1)^p
+    ---|---------|---------|-------------------
+     1 |   a - 1 |   a + 1 | 2 (a)
+     2 | -2a + 1 |  2a + 1 | 2
+     3 |  3a - 1 |  3a + 1 | 2 (3a)
+     4 | -4a + 1 |  4a + 1 | 2
+    So the reminder is (2p % a) * a when p is odd.
+    """
+    primes = all_primes_under(int(10 * sqrt(thresh)))
+
+    for i, _a in enumerate(primes):
+        if i % 2 == 1:
+            continue
+        _p = i + 1
+        _remainder = ((2 * _p) % _a) * _a
+        if _remainder > thresh:
+            return _p, _a, _remainder
+    return None
+
+
+@wrappy.probe()
 def euler_problem_145(max_digits=9):
     """
     https://projecteuler.net/problem=145
