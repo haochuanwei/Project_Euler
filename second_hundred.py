@@ -6,6 +6,7 @@ Solutions to the second hundred problems of Project Euler.
 
 import wrappy
 from tqdm import tqdm
+from collections import defaultdict
 
 
 @wrappy.probe()
@@ -817,6 +818,71 @@ def euler_problem_125(bound=int(1e8)):
                 palindrome_to_bases[_candidate].append(list(range(i + 1, j + 1)))
 
     return palindrome_to_bases
+
+
+@wrappy.probe()
+def euler_problem_126(layer_size_limit=30000):
+    """
+    https://projecteuler.net/problem=126
+    """
+    """
+    Deprecated idea: start from a 1-by-1-by-1 cube.
+    Consider the cube in x, y, z dimensions with length (a, b, c) where,
+    without loss of generality, a >= b >= c.
+    Imagine stretching the cube in the three dimensions.
+    The same stretching applies to any layers the cuboid has -- the cubes
+    per unit stretched along an axis is the area obtained by projecting
+    the cuboid in that axis.
+    """
+    """
+    Idea: divide the layered cuboid into different kinds of pieces:
+    (1) starting cuboid
+    (2) extra cuboids "grown" from the six faces
+    (3) triangular shapes interpolated from (2)
+    (4) tetrahedrons interpolated from 3
+    Then we have a formula of the total volume.
+
+    def volume(a, b, c, k):
+        # base volume at k = 0
+        vol = a * b * c
+        # extra cuboids from 6 faces: starting at k = 1
+        if k >= 1:
+            for _face in [a * b, b * c, c * a]:
+                vol += 2 * k * _face
+        # extra triangulars from 12 sides: starting at k = 2
+        if k >= 2:
+            for _side in [a, b, c]:
+                vol += 4 * _side * ((k - 1) * k / 2)
+        # extra tetrahedrons from 8 vertices: starting at k = 3
+        if k >= 3:
+            vol += 8 * ((k - 2) * (k - 1) * k / 6)
+        return round(vol)
+
+    Taking the diff between volume(a, b, c, k) and volumn(a, b, c, k - 1)
+    gives us the formula for layer_size(a, b, c, k).
+    """
+
+    def layer_size(a, b, c, k):
+        size = 2 * (a * b + b * c + c * a)
+        size += (4 * k - 4) * (a + b + c)
+        size += 4 * (k - 1) * (k - 2)
+        return size
+
+    layer_size_to_specs = defaultdict(list)
+    dim_limit = layer_size_limit // 4
+
+    for _a in tqdm(range(1, dim_limit)):
+        _b_bound = min(_a, layer_size_limit // (2 * _a))
+        for _b in range(1, _b_bound + 1):
+            _c_bound = min(_b, (layer_size_limit - 2 * _a * _b) // (2 * (_a + _b)))
+            for _c in range(1, _c_bound + 1):
+                for _k in range(1, int(1e6)):
+                    _layer_size = layer_size(_a, _b, _c, _k)
+                    if _layer_size > layer_size_limit:
+                        break
+                    layer_size_to_specs[_layer_size].append((_a, _b, _c, _k))
+
+    return sorted(layer_size_to_specs.items(), key=lambda t: t[0])
 
 
 @wrappy.probe()

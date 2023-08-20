@@ -1449,6 +1449,36 @@ def generate_combinations_from_integer_range(elements=6, low=0, high=9):
                 yield [_value, *_arr]
 
 
+def generate_partitions_of_identical_elements(
+    total, num_partitions, min_partition=0, max_partition=None
+):
+    """
+    Recursive approach to generate partitions (counts) of identical elements.
+    Optionally specify the least number of elements per partition.
+    """
+    # base case: just 1 partition
+    assert num_partitions > 0, f"Invliad number of partitions: {num_partitions}"
+    if num_partitions == 1:
+        yield [total]
+    else:
+        # pre-assign the least count required
+        if min_partition > 0:
+            total -= num_partitions * min_partition
+        assert total >= 0, "Total number is too low"
+
+        # partition based on the 0-required version
+        min_greatest = ((total - 1) // num_partitions) + 1
+        max_greatest = total if max_partition is None else min(total, max_partition)
+        for _kept in range(min_greatest, max_greatest + 1):
+            for _arr in generate_partitions_of_identical_elements(
+                total - _kept,
+                num_partitions - 1,
+                min_partition=0,
+                max_partition=_kept,
+            ):
+                yield [_ + min_partition for _ in [_kept, *_arr]]
+
+
 def generate_all_partitions_from_list(arr):
     """
     Recursive approach to generate array element partitions.
@@ -1461,7 +1491,22 @@ def generate_all_partitions_from_list(arr):
             yield _l, [*_r, arr[-1]]
 
 
-class IntegerModulos(object):
+class GrowingGeode:
+    """
+    "Geode" in 3D space that grows toward cubes next to its surface.
+    """
+
+    @staticmethod
+    def slices_grown_from_unit(steps=0):
+        slices = [1]
+        if steps == 0:
+            return slices
+        for _ in range(1, steps + 1):
+            slices.append(slices[-1] + _ * 4)
+        return [*slices, *slices[-2::-1]]
+
+
+class IntegerModulos:
     """
     Integer in a modulos space.
     """
