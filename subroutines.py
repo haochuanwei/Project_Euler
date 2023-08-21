@@ -88,6 +88,18 @@ class Factorizer:  # pylint: disable=too-few-public-methods
         # if none of the primes divide num, then num is a prime
         return num
 
+    def is_prime(self, num):
+        """
+        Determine whether a number is prime.
+        """
+        self._check_bound(num)
+        if num in self.set_primes:
+            return True
+        elif num < self.list_primes[-1]:
+            return False
+        else:
+            return self._least_divisor(num) == num
+
     def factorize(self, num):
         """
         Factorize a number.
@@ -1491,21 +1503,6 @@ def generate_all_partitions_from_list(arr):
             yield _l, [*_r, arr[-1]]
 
 
-class GrowingGeode:
-    """
-    "Geode" in 3D space that grows toward cubes next to its surface.
-    """
-
-    @staticmethod
-    def slices_grown_from_unit(steps=0):
-        slices = [1]
-        if steps == 0:
-            return slices
-        for _ in range(1, steps + 1):
-            slices.append(slices[-1] + _ * 4)
-        return [*slices, *slices[-2::-1]]
-
-
 class IntegerModulos:
     """
     Integer in a modulos space.
@@ -1715,3 +1712,79 @@ class BouncyNumberHelper:
         if sorted(chars, reverse=True) == chars:
             return False
         return True
+
+
+class HexagonRingsNeighborFinder:
+    @staticmethod
+    @lru_cache(maxsize=int(1e6))
+    def rvt_to_value(r, v, t):
+        value = 1
+        for _r in range(r):
+            value += 1 if _r == 0 else _r * 6
+        value += v * r
+        value += t
+        return value
+
+    @staticmethod
+    @lru_cache(maxsize=int(1e6))
+    def value_to_rvt(value):
+        assert value > 0
+        value -= 1
+        r = 0
+        while value >= r * 6:
+            value -= 1 if r == 0 else r * 6
+            r += 1
+        v = value // r
+        value -= v * r
+        return r, v, value
+
+    @staticmethod
+    @lru_cache(maxsize=int(1e6))
+    def prev_in_ring(value):
+        assert value > 0
+        r, v, t = HexagonRingsNeighborFinder.value_to_rvt(value)
+        if v == 0 and t == 0:
+            return HexagonRingsNeighborFinder.rvt_to_value(r, 5, r - 1)
+        return value - 1
+
+    @staticmethod
+    @lru_cache(maxsize=int(1e6))
+    def next_in_ring(value):
+        assert value > 0
+        r, v, t = HexagonRingsNeighborFinder.value_to_rvt(value)
+        if v == 5 and t == r - 1:
+            return HexagonRingsNeighborFinder.rvt_to_value(r, 0, 0)
+        return value + 1
+
+    def inner_ring_neighbors(self, value):
+        r, v, t = HexagonRingsNeighborFinder.value_to_rvt(value)
+        if t == 0:
+            yield HexagonRingsNeighborFinder.rvt_to_value(r - 1, v, t)
+        else:
+            il = HexagonRingsNeighborFinder.rvt_to_value(r - 1, v, t - 1)
+            yield il
+            yield HexagonRingsNeighborFinder.next_in_ring(il)
+
+    def outer_ring_neighbors(self, value):
+        r, v, t = HexagonRingsNeighborFinder.value_to_rvt(value)
+        if t == 0:
+            om = HexagonRingsNeighborFinder.rvt_to_value(r + 1, v, t)
+            yield om
+            yield HexagonRingsNeighborFinder.prev_in_ring(om)
+            yield HexagonRingsNeighborFinder.next_in_ring(om)
+        else:
+            ol = HexagonRingsNeighborFinder.rvt_to_value(r + 1, v, t)
+            yield ol
+            yield HexagonRingsNeighborFinder.next_in_ring(ol)
+
+    def all_neighbors(self, value):
+        if value == 1:
+            for _ in range(2, 8):
+                yield _
+        else:
+            yield HexagonRingsNeighborFinder.prev_in_ring(value)
+            yield HexagonRingsNeighborFinder.next_in_ring(value)
+            for _ in self.inner_ring_neighbors(value):
+                yield _
+            for _ in self.outer_ring_neighbors(value):
+                yield _

@@ -886,6 +886,89 @@ def euler_problem_126(layer_size_limit=30000):
 
 
 @wrappy.probe()
+def euler_problem_128(terms=2000):
+    """
+    https://projecteuler.net/problem=128
+    """
+    """
+    Idea: consider traversing the numbers by their values.
+    1 -> 2 -> 3 -> ...
+    Use a index schema (r, v, t) or "ring, vertex, tile" where
+    - ring stands for which ring the number is in
+    - vertex stands for the last vertex before the number on the same ring
+    - tile stands for the steps from the vertex to the number.
+    Then 1 is written as (0, 0, 0), 8 is written as (2, 0, 0),
+    9 is (2, 0, 1), 14 is (2, 3, 0), 25 is (3, 1, 2).
+
+    This is true for (at least) r >= 3:
+    If a number is in the middle of a ring, two of the neighbor diffs will be 1.
+    Two of the remaining four diffs will have to be even, no matter whether t is 0.
+    So the only candidates with three prime diffs will at the start or end of a ring.
+    We can derive a formula of these numbers and the diffs.
+    """
+    from subroutines import HexagonRingsNeighborFinder, Factorizer
+
+    fac = Factorizer()
+    finder = HexagonRingsNeighborFinder()
+    qualified = []
+
+    def ring_start(r):
+        return round(2 + 6 * (r - 1) * r / 2)
+
+    def ring_end(r):
+        return round(1 + 6 * (r + 1) * r / 2)
+
+    def diffs_ring_start(r):
+        ring = 6 * r
+        yield ring - 1
+        yield ring + 1
+        yield 12 * r + 5
+
+    def diffs_ring_end(r):
+        ring = 6 * r
+        yield ring - 1
+        yield ring + 5
+        yield 12 * r - 7
+
+    def full_check(num):
+        prime_diffs = 0
+        for _nbr in finder.all_neighbors(num):
+            _diff = abs(_nbr - num)
+            if _diff != 1 and fac._least_divisor(_diff) == _diff:
+                prime_diffs += 1
+        return prime_diffs == 3
+
+    # brute force for r < 3
+    for _num in range(1, 20):
+        if full_check(_num):
+            qualified.append(_num)
+
+    # check ring ends for r >= 3
+    r = 3
+    with tqdm(total=terms) as pbar:
+        pbar.update(len(qualified))
+        while len(qualified) < terms:
+            _flag_start, _flag_end = True, True
+            for _num in diffs_ring_start(r):
+                if not fac.is_prime(_num):
+                    _flag_start = False
+                    break
+            for _num in diffs_ring_end(r):
+                if not fac.is_prime(_num):
+                    _flag_end = False
+                    break
+            if _flag_start:
+                qualified.append(ring_start(r))
+                pbar.update(1)
+            if _flag_end:
+                qualified.append(ring_end(r))
+                pbar.update(1)
+            r += 1
+
+    return qualified[terms - 1]
+
+
+@wrappy.probe()
 def euler_problem_145(max_digits=9):
     """
     https://projecteuler.net/problem=145
